@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plant Growth Experiment Simulation</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f5; padding: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef } = React;
+
+const WATER_LEVELS = [
+  { label: "No water", ml: 0 },
+  { label: "50 mL", ml: 50 },
+  { label: "100 mL", ml: 100 },
+  { label: "200 mL", ml: 200 },
+  { label: "500 mL", ml: 500 },
+];
+
+const CONTROLLED_VARS = [
+  "Same type of plant",
+  "Same amount of sunlight",
+  "Same type of soil",
+  "Same size pot",
+  "Same temperature",
+  "Same starting height",
+];
+
+function growthModel(ml, days) {
+  const optimal = 160;
+  const maxRate = 1.0;
+  const sigma = 120;
+  const rate = maxRate * Math.exp(-0.5 * ((ml - optimal) / sigma) ** 2);
+  const base = rate * days;
+  const noise = (Math.random() - 0.5) * 2.5;
+  return Math.max(0, Math.round((base + noise) * 10) / 10);
+}
+
+function Plant({ height, waterMl, maxH }) {
+  const maxDisplayH = 100;
+  const stemH = maxH > 0 ? Math.min(maxDisplayH, (height / Math.max(maxH, 16)) * maxDisplayH) : 0;
+  const leafSize = Math.max(0, Math.min(1, height / 8));
+  const isDead = height < 0.5 && waterMl === 0;
+  const isDrowning = waterMl >= 400 && height < 4;
+  const stemColor = isDead ? "#8B7355" : isDrowning ? "#6B8E4E" : "#2d8a4e";
+  const leafColor = isDead ? "#a0825a" : isDrowning ? "#7da65e" : "#3cb44b";
+  const waterLevel = Math.min(28, (waterMl / 500) * 28);
+
+  return (
+    <svg width="80" height="150" viewBox="0 0 80 150">
+      <path d="M18,105 L22,138 L58,138 L62,105 Z" fill="#b07040" stroke="#8B5E3C" strokeWidth="1.5" />
+      <rect x="15" y="100" width="50" height="7" rx="2" fill="#8B5E3C" />
+      <path d="M20,107 L22,128 L58,128 L60,107 Z" fill="#5C4033" />
+      {waterMl > 0 && (
+        <path d={`M20,${128 - waterLevel} L22,128 L58,128 L60,${128 - waterLevel} Z`} fill="rgba(100,160,220,0.35)" />
+      )}
+      {height > 0 && (
+        <rect x="38" y={105 - stemH} width="4" height={stemH} fill={stemColor} rx="1" />
+      )}
+      {height > 1.5 && leafSize > 0.15 && (
+        <>
+          <ellipse cx={34 - leafSize * 5} cy={105 - stemH * 0.6} rx={7 * leafSize} ry={3.5 * leafSize} fill={leafColor} transform={`rotate(-30, ${34 - leafSize * 5}, ${105 - stemH * 0.6})`} />
+          <ellipse cx={46 + leafSize * 5} cy={105 - stemH * 0.45} rx={7 * leafSize} ry={3.5 * leafSize} fill={leafColor} transform={`rotate(30, ${46 + leafSize * 5}, ${105 - stemH * 0.45})`} />
+        </>
+      )}
+      {height > 5 && (
+        <>
+          <ellipse cx={36} cy={103 - stemH} rx={5 * leafSize} ry={3 * leafSize} fill={leafColor} transform={`rotate(-40, 36, ${103 - stemH})`} />
+          <ellipse cx={44} cy={103 - stemH} rx={5 * leafSize} ry={3 * leafSize} fill={leafColor} transform={`rotate(40, 44, ${103 - stemH})`} />
+        </>
+      )}
+      {isDead && <text x="40" y="90" textAnchor="middle" fontSize="13">🥀</text>}
+      {isDrowning && height > 0 && <text x="40" y={95 - stemH} textAnchor="middle" fontSize="13">😟</text>}
+    </svg>
+  );
+}
+
+const SectionBox = ({ num, title, done, active, children }) => (
+  <div style={{
+    background: active ? "#f0f7f0" : done ? "#f8faf8" : "#fafafa",
+    border: active ? "2px solid #2d8a4e" : done ? "2px solid #a3d9a5" : "1px solid #e0e0e0",
+    borderRadius: 12, padding: 16, marginBottom: 12,
+    opacity: (!active && !done) ? 0.5 : 1,
+    pointerEvents: (!active && !done) ? "none" : "auto",
+  }}>
+    <h3 style={{ margin: "0 0 8px", color: "#2d6a2e", fontSize: 15 }}>
+      {done && "✅ "}Step {num}: {title}
+    </h3>
+    {children}
+  </div>
+);
+
+function PlantExperiment() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [prediction, setPrediction] = useState(null);
+  const [measureAnswer, setMeasureAnswer] = useState(null);
+  const [unitAnswer, setUnitAnswer] = useState(null);
+  const [controlledChecked, setControlledChecked] = useState([]);
+  const [day, setDay] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [currentTrial, setCurrentTrial] = useState(1);
+  const [allTrials, setAllTrials] = useState([]);
+  const [currentHeights, setCurrentHeights] = useState(null);
+  const [methodText, setMethodText] = useState("");
+  const [showSampleMethod, setShowSampleMethod] = useState(false);
+  const heightsRef = useRef(null);
+
+  const maxDays = 30;
+
+  function startGrowing() {
+    if (day === 0) {
+      const h = WATER_LEVELS.map(() => 0);
+      heightsRef.current = h;
+      setCurrentHeights([...h]);
+    }
+    setRunning(true);
+  }
+
+  function advanceDay() {
+    const newDay = day + 1;
+    const h = WATER_LEVELS.map((w) => growthModel(w.ml, newDay));
+    heightsRef.current = h;
+    setCurrentHeights([...h]);
+    setDay(newDay);
+  }
+
+  function finishTrial() {
+    setRunning(false);
+    if (currentHeights) {
+      setAllTrials(prev => [...prev, { num: currentTrial, heights: [...currentHeights], days: day }]);
+    }
+  }
+
+  function nextTrial() {
+    if (currentTrial < 3) {
+      setCurrentTrial(n => n + 1);
+      setDay(0);
+      setCurrentHeights(null);
+      heightsRef.current = null;
+      setRunning(false);
+    }
+  }
+
+  function resetAll() {
+    setCurrentStep(1);
+    setPrediction(null);
+    setMeasureAnswer(null);
+    setUnitAnswer(null);
+    setControlledChecked([]);
+    setDay(0);
+    setRunning(false);
+    setCurrentTrial(1);
+    setAllTrials([]);
+    setCurrentHeights(null);
+    heightsRef.current = null;
+    setMethodText("");
+    setShowSampleMethod(false);
+  }
+
+  const trialDone = allTrials.some(t => t.num === currentTrial);
+  const allTrialsDone = allTrials.length >= 3;
+
+  const averages = allTrialsDone
+    ? WATER_LEVELS.map((_, i) => {
+        const vals = allTrials.map(t => t.heights[i]);
+        return Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10;
+      })
+    : null;
+
+  const maxH = currentHeights ? Math.max(...currentHeights, 1) : 1;
+
+  const sampleMethod = `1. Collect 5 identical seedlings of the same type and height.\n2. Place each in the same sized pot with the same type of soil.\n3. Put all pots in the same location so they get the same sunlight and temperature.\n4. Each day, water each plant with a different amount: 0 mL, 50 mL, 100 mL, 200 mL, and 500 mL.\n5. After ${allTrials.length > 0 ? allTrials[0].days : 14} days, measure the height of each plant from the soil to the tip using a ruler.\n6. Record the height in centimetres (cm) in a results table.\n7. Repeat the experiment 3 times and calculate the average height for each water amount.`;
+
+  const measureOptions = [
+    { label: "The colour of the leaves", correct: false, feedback: "🤔 Leaf colour might change, but it doesn't tell us how much the plant has grown. Try again!" },
+    { label: "The height of the plant", correct: true, feedback: "✅ Correct! Height is a clear, measurable way to see how much the plant has grown. We'll measure it with a ruler." },
+    { label: "The number of leaves", correct: false, feedback: "🤔 Counting leaves could show health, but height is a more direct and easier measure of growth. Try again!" },
+    { label: "How much water is left in the soil", correct: false, feedback: "🤔 That tells us about the soil, not about how much the plant grew. Try again!" },
+  ];
+
+  return (
+    <div style={{ maxWidth: 740, margin: "0 auto", padding: 16 }}>
+      <h2 style={{ textAlign: "center", color: "#2d6a2e", margin: "0 0 2px" }}>🌱 Plant Growth Experiment</h2>
+      <p style={{ textAlign: "center", color: "#555", margin: "0 0 16px", fontSize: 14 }}>
+        How does the amount of water affect plant growth?
+      </p>
+
+      {/* STEP 1: Prediction */}
+      <SectionBox num={1} title="Make your prediction" done={currentStep > 1} active={currentStep === 1}>
+        <p style={{ margin: "0 0 10px", fontSize: 14, color: "#444" }}>
+          Which amount of water do you think will help the plant grow the tallest?
+        </p>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+          {WATER_LEVELS.map((w, i) => (
+            <button key={i} onClick={() => setPrediction(i)} style={{
+              padding: "7px 12px", borderRadius: 8, fontSize: 13,
+              border: prediction === i ? "2px solid #2d6a2e" : "2px solid #ccc",
+              background: prediction === i ? "#d4edda" : "#fff",
+              fontWeight: prediction === i ? 700 : 400, cursor: "pointer",
+            }}>{w.label}/day</button>
+          ))}
+        </div>
+        {prediction !== null && (
+          <>
+            <div style={{ padding: 8, background: "#fff", borderRadius: 8, fontSize: 14, marginBottom: 8 }}>
+              ✏️ Your prediction: <strong>{WATER_LEVELS[prediction].label}/day</strong> will grow tallest.
+            </div>
+            <button onClick={() => setCurrentStep(2)} style={{
+              padding: "8px 20px", borderRadius: 8, border: "none",
+              background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+            }}>Next →</button>
+          </>
+        )}
+      </SectionBox>
+
+      {/* STEP 2: What are you measuring? */}
+      <SectionBox num={2} title="What are you measuring?" done={currentStep > 2} active={currentStep === 2}>
+        <p style={{ margin: "0 0 10px", fontSize: 14, color: "#444" }}>
+          What result will you record for each plant to find out how water affects growth?
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+          {measureOptions.map((opt) => (
+            <button key={opt.label} onClick={() => setMeasureAnswer(opt.label)} style={{
+              padding: "8px 14px", borderRadius: 8, fontSize: 13, textAlign: "left",
+              border: measureAnswer === opt.label
+                ? opt.correct ? "2px solid #2d6a2e" : "2px solid #e67e22"
+                : "2px solid #ccc",
+              background: measureAnswer === opt.label
+                ? opt.correct ? "#d4edda" : "#fff3cd"
+                : "#fff",
+              fontWeight: measureAnswer === opt.label ? 600 : 400, cursor: "pointer",
+            }}>{opt.label}</button>
+          ))}
+        </div>
+        {measureAnswer && (
+          <div style={{ padding: 8, background: "#fff", borderRadius: 8, fontSize: 14, marginBottom: 10 }}>
+            {measureOptions.find(o => o.label === measureAnswer).feedback}
+          </div>
+        )}
+        {measureAnswer === "The height of the plant" && (
+          <button onClick={() => setCurrentStep(3)} style={{
+            padding: "8px 20px", borderRadius: 8, border: "none",
+            background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+          }}>Next →</button>
+        )}
+      </SectionBox>
+
+      {/* STEP 3: Units */}
+      <SectionBox num={3} title="What units will you record in?" done={currentStep > 3} active={currentStep === 3}>
+        <p style={{ margin: "0 0 10px", fontSize: 14, color: "#444" }}>
+          What unit will you use to measure the height of the plant?
+        </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+          {["Metres (m)", "Centimetres (cm)", "Millimetres (mm)", "Inches (in)"].map((u) => (
+            <button key={u} onClick={() => setUnitAnswer(u)} style={{
+              padding: "7px 14px", borderRadius: 8, fontSize: 13,
+              border: unitAnswer === u ? "2px solid #2d6a2e" : "2px solid #ccc",
+              background: unitAnswer === u ? (u === "Centimetres (cm)" ? "#d4edda" : "#fff3cd") : "#fff",
+              fontWeight: unitAnswer === u ? 700 : 400, cursor: "pointer",
+            }}>{u}</button>
+          ))}
+        </div>
+        {unitAnswer && (
+          <div style={{ padding: 8, background: "#fff", borderRadius: 8, fontSize: 14, marginBottom: 10 }}>
+            {unitAnswer === "Centimetres (cm)"
+              ? "✅ Correct! Centimetres (cm) are a good unit for measuring small plant heights."
+              : "🤔 That could work, but centimetres (cm) are the best choice for measuring small plant heights — not too big, not too small."}
+          </div>
+        )}
+        {unitAnswer && (
+          <button onClick={() => setCurrentStep(4)} style={{
+            padding: "8px 20px", borderRadius: 8, border: "none",
+            background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+          }}>Next →</button>
+        )}
+      </SectionBox>
+
+      {/* STEP 4: Controlled Variables */}
+      <SectionBox num={4} title="What will you keep the same? (Controlled variables)" done={currentStep > 4} active={currentStep === 4}>
+        <p style={{ margin: "0 0 10px", fontSize: 14, color: "#444" }}>
+          To make it a fair test, what things should you keep the same each time? Tick all that apply.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+          {CONTROLLED_VARS.map((v) => (
+            <label key={v} style={{ fontSize: 14, display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+              <input type="checkbox" checked={controlledChecked.includes(v)}
+                onChange={() => {
+                  setControlledChecked(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]);
+                }}
+                style={{ width: 18, height: 18 }}
+              />{v}
+            </label>
+          ))}
+        </div>
+        {controlledChecked.length > 0 && (
+          <div style={{ padding: 8, background: "#fff", borderRadius: 8, fontSize: 14, marginBottom: 10 }}>
+            {controlledChecked.length === CONTROLLED_VARS.length
+              ? "✅ Excellent! All of these should be kept the same to make it a fair test."
+              : controlledChecked.length >= 4
+              ? "👍 Good thinking! Actually, all of these should be kept the same. Can you tick the rest?"
+              : "Keep going — think about what else could affect growth besides water."}
+          </div>
+        )}
+        {controlledChecked.length === CONTROLLED_VARS.length && (
+          <button onClick={() => setCurrentStep(5)} style={{
+            padding: "8px 20px", borderRadius: 8, border: "none",
+            background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+          }}>Next → Run the experiment!</button>
+        )}
+      </SectionBox>
+
+      {/* STEP 5: Run experiment */}
+      <SectionBox num={5} title="Run the experiment and record results" done={currentStep > 5} active={currentStep === 5}>
+        <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#2d6a2e" }}>
+            Trial {currentTrial} of 3 — Day {day} {day > 0 ? `/ ${maxDays} max` : ""}
+          </span>
+          {day > 0 && (
+            <div style={{ width: 120, height: 8, background: "#ddd", borderRadius: 4 }}>
+              <div style={{ width: `${(day / maxDays) * 100}%`, height: "100%", background: "#2d8a4e", borderRadius: 4 }} />
+            </div>
+          )}
+        </div>
+
+        {!running && !trialDone && (
+          <button onClick={startGrowing} style={{
+            padding: "8px 18px", borderRadius: 8, border: "none",
+            background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14, marginBottom: 10,
+          }}>▶ Start Trial {currentTrial}</button>
+        )}
+
+        {running && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+            <button onClick={advanceDay} disabled={day >= maxDays} style={{
+              padding: "8px 16px", borderRadius: 8, border: "none",
+              background: day >= maxDays ? "#bbb" : "#3182bd", color: "#fff",
+              fontWeight: 600, cursor: day >= maxDays ? "default" : "pointer", fontSize: 14,
+            }}>☀️ Next Day</button>
+            {day >= 7 && (
+              <button onClick={finishTrial} style={{
+                padding: "8px 16px", borderRadius: 8, border: "none",
+                background: "#e67e22", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+              }}>📏 Stop &amp; Measure (Day {day})</button>
+            )}
+            {day < 7 && (
+              <span style={{ fontSize: 12, color: "#888", alignSelf: "center" }}>
+                (Grow for at least 7 days before measuring)
+              </span>
+            )}
+          </div>
+        )}
+
+        {currentHeights && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            {WATER_LEVELS.map((w, i) => (
+              <div key={i} style={{
+                textAlign: "center",
+                background: prediction === i ? "#fffbe6" : "#fafafa",
+                border: prediction === i ? "2px solid #f5c518" : "1px solid #e0e0e0",
+                borderRadius: 10, padding: "6px 3px", width: 100,
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "#555" }}>{w.label}/day</div>
+                <Plant height={currentHeights[i]} waterMl={w.ml} maxH={maxH} />
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#2d6a2e" }}>
+                  {trialDone ? currentHeights[i] : running ? "..." : "—"} cm
+                </div>
+                {prediction === i && <div style={{ fontSize: 10, color: "#b8860b" }}>⭐ prediction</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {trialDone && !running && currentTrial < 3 && (
+          <button onClick={nextTrial} style={{
+            padding: "8px 18px", borderRadius: 8, border: "none",
+            background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+          }}>▶ Start Trial {currentTrial + 1}</button>
+        )}
+
+        {allTrials.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <h4 style={{ margin: "0 0 6px", color: "#2d6a2e", fontSize: 14 }}>📋 Results Table</h4>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: "#e8f5e9" }}>
+                  <th style={{ border: "1px solid #ccc", padding: 5, textAlign: "left" }}>Water/day</th>
+                  <th style={{ border: "1px solid #ccc", padding: 5, textAlign: "center" }}>Trial 1 (cm)</th>
+                  <th style={{ border: "1px solid #ccc", padding: 5, textAlign: "center", color: allTrials.length >= 2 ? "#333" : "#ccc" }}>Trial 2 (cm)</th>
+                  <th style={{ border: "1px solid #ccc", padding: 5, textAlign: "center", color: allTrials.length >= 3 ? "#333" : "#ccc" }}>Trial 3 (cm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {WATER_LEVELS.map((w, i) => (
+                  <tr key={i} style={{ background: prediction === i ? "#fffde7" : "#fff" }}>
+                    <td style={{ border: "1px solid #ccc", padding: 5 }}>{w.label} {prediction === i ? "⭐" : ""}</td>
+                    {[0, 1, 2].map(t => (
+                      <td key={t} style={{ border: "1px solid #ccc", padding: 5, textAlign: "center" }}>
+                        {allTrials[t] ? allTrials[t].heights[i] : "—"}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {allTrials.length > 0 && (
+              <p style={{ fontSize: 12, color: "#777", margin: "4px 0 0" }}>
+                {allTrials.map(t => `Trial ${t.num}: ${t.days} days`).join(" · ")}
+              </p>
+            )}
+          </div>
+        )}
+
+        {allTrialsDone && (
+          <button onClick={() => setCurrentStep(6)} style={{
+            padding: "8px 20px", borderRadius: 8, border: "none", marginTop: 12,
+            background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+          }}>Next → Calculate averages</button>
+        )}
+      </SectionBox>
+
+      {/* STEP 6: Averages */}
+      <SectionBox num={6} title="Calculate the averages" done={currentStep > 6} active={currentStep === 6}>
+        {averages && (
+          <>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, marginBottom: 10 }}>
+              <thead>
+                <tr style={{ background: "#e8f5e9" }}>
+                  <th style={{ border: "1px solid #ccc", padding: 5, textAlign: "left" }}>Water/day</th>
+                  <th style={{ border: "1px solid #ccc", padding: 5 }}>Trial 1</th>
+                  <th style={{ border: "1px solid #ccc", padding: 5 }}>Trial 2</th>
+                  <th style={{ border: "1px solid #ccc", padding: 5 }}>Trial 3</th>
+                  <th style={{ border: "1px solid #ccc", padding: 5, background: "#d4edda" }}>Average (cm)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {WATER_LEVELS.map((w, i) => {
+                  const best = averages.indexOf(Math.max(...averages));
+                  return (
+                    <tr key={i} style={{ background: i === best ? "#e8f5e9" : "#fff" }}>
+                      <td style={{ border: "1px solid #ccc", padding: 5 }}>{w.label}</td>
+                      {allTrials.map((t, ti) => (
+                        <td key={ti} style={{ border: "1px solid #ccc", padding: 5, textAlign: "center" }}>{t.heights[i]}</td>
+                      ))}
+                      <td style={{ border: "1px solid #ccc", padding: 5, textAlign: "center", fontWeight: 700, background: i === best ? "#c8e6c9" : "#eef7ee" }}>
+                        {averages[i]}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {(() => {
+              const bestIdx = averages.indexOf(Math.max(...averages));
+              return (
+                <div style={{ padding: 10, borderRadius: 8, background: "#d4edda", fontSize: 14, marginBottom: 10 }}>
+                  🏆 <strong>Best average growth:</strong> {WATER_LEVELS[bestIdx].label}/day at {averages[bestIdx]} cm.
+                  {bestIdx === prediction
+                    ? " ✅ Your prediction was correct!"
+                    : ` Your prediction was ${WATER_LEVELS[prediction].label}/day.`}
+                </div>
+              );
+            })()}
+            <p style={{ fontSize: 13, color: "#555", margin: "0 0 10px" }}>
+              💡 The averages smooth out random variation and give us more <strong>reliable</strong> results.
+            </p>
+            <button onClick={() => setCurrentStep(7)} style={{
+              padding: "8px 20px", borderRadius: 8, border: "none",
+              background: "#2d8a4e", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 14,
+            }}>Next → Write a method</button>
+          </>
+        )}
+      </SectionBox>
+
+      {/* STEP 7: Method */}
+      <SectionBox num={7} title="Write a method for this experiment" done={false} active={currentStep === 7}>
+        <p style={{ margin: "0 0 10px", fontSize: 14, color: "#444" }}>
+          Write step-by-step instructions so that someone else could repeat your experiment and get similar results. Think about what you changed, what you measured, and what you kept the same.
+        </p>
+        <textarea
+          value={methodText}
+          onChange={(e) => setMethodText(e.target.value)}
+          placeholder={"1. First, I would...\n2. Then...\n3. ..."}
+          style={{
+            width: "100%", minHeight: 140, borderRadius: 8, border: "1px solid #ccc",
+            padding: 10, fontSize: 14, fontFamily: "inherit", resize: "vertical", boxSizing: "border-box",
+          }}
+        />
+        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+          <button onClick={() => setShowSampleMethod(!showSampleMethod)} style={{
+            padding: "8px 16px", borderRadius: 8,
+            border: "1px solid #ccc", background: "#fff",
+            cursor: "pointer", fontSize: 14,
+          }}>{showSampleMethod ? "Hide" : "👀 Show"} sample method</button>
+          <button onClick={resetAll} style={{
+            padding: "8px 16px", borderRadius: 8,
+            border: "1px solid #ccc", background: "#fff",
+            cursor: "pointer", fontSize: 14,
+          }}>🔄 Start over</button>
+        </div>
+        {showSampleMethod && (
+          <div style={{ marginTop: 10, padding: 12, background: "#fff", borderRadius: 8, border: "1px solid #c8e6c9" }}>
+            <p style={{ margin: "0 0 6px", fontWeight: 600, fontSize: 14, color: "#2d6a2e" }}>Sample method:</p>
+            <pre style={{ margin: 0, fontSize: 13, whiteSpace: "pre-wrap", color: "#444", fontFamily: "inherit", lineHeight: 1.6 }}>
+              {sampleMethod}
+            </pre>
+          </div>
+        )}
+      </SectionBox>
+    </div>
+  );
+}
+
+ReactDOM.render(<PlantExperiment />, document.getElementById("root"));
+</script>
+</body>
+</html>
