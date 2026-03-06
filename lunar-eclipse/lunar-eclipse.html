@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lunar Eclipse Simulation — 3 March 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0a0a1e; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const SUN_RADIUS_KM = 696340;
+const EARTH_RADIUS_KM = 6371;
+const MOON_RADIUS_KM = 1737;
+
+function SizeComparison() {
+  const canvasRef = useRef(null);
+  const draw = useCallback(() => {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext("2d");
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = "#08081a"; ctx.fillRect(0, 0, W, H);
+    const pxPerKm = 30 / EARTH_RADIUS_KM;
+    const earthR = 30, moonR = Math.round(MOON_RADIUS_KM * pxPerKm), sunR = Math.round(SUN_RADIUS_KM * pxPerKm);
+    const sunX = -sunR + 60, midY = H * 0.45;
+    var sg = ctx.createRadialGradient(sunX, midY, sunR * 0.97, sunX, midY, sunR * 1.02);
+    sg.addColorStop(0, "#fff8d8"); sg.addColorStop(0.5, "#ffc830"); sg.addColorStop(1, "rgba(255,200,48,0)");
+    ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sunX, midY, sunR * 1.02, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff4c8"; ctx.beginPath(); ctx.arc(sunX, midY, sunR, 0, Math.PI * 2); ctx.fill();
+    var sunEdgeX = sunX + sunR;
+    ctx.fillStyle = "#ffd050"; ctx.font = "bold 13px system-ui"; ctx.textAlign = "left";
+    ctx.fillText("Sun", sunEdgeX + 14, 20);
+    ctx.fillStyle = "#bbb"; ctx.font = "11px system-ui";
+    ctx.fillText("696,340 km radius", sunEdgeX + 14, 36);
+    ctx.strokeStyle = "rgba(255,208,80,0.5)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(sunEdgeX + 12, 26); ctx.lineTo(sunEdgeX + 3, 26); ctx.stroke();
+    ctx.fillStyle = "rgba(255,208,80,0.5)";
+    ctx.beginPath(); ctx.moveTo(sunEdgeX + 3, 23); ctx.lineTo(sunEdgeX - 2, 26); ctx.lineTo(sunEdgeX + 3, 29); ctx.fill();
+    var earthX = W * 0.52;
+    var ag = ctx.createRadialGradient(earthX, midY, earthR, earthX, midY, earthR + 4);
+    ag.addColorStop(0, "rgba(80,160,255,0.4)"); ag.addColorStop(1, "rgba(80,160,255,0)");
+    ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(earthX, midY, earthR + 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#2868d0"; ctx.beginPath(); ctx.arc(earthX, midY, earthR, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#38b060";
+    ctx.beginPath(); ctx.arc(earthX - 8, midY - 5, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(earthX + 9, midY + 7, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#70aaff"; ctx.font = "bold 12px system-ui"; ctx.textAlign = "center";
+    ctx.fillText("Earth", earthX, midY + earthR + 20);
+    ctx.fillStyle = "#aaa"; ctx.font = "10px system-ui";
+    ctx.fillText("6,371 km", earthX, midY + earthR + 34);
+    var moonX = W * 0.80;
+    ctx.fillStyle = "#d8d8d0"; ctx.beginPath(); ctx.arc(moonX, midY, moonR, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#c0c0b8"; ctx.beginPath(); ctx.arc(moonX - 2, midY + 1, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#ddd"; ctx.font = "bold 12px system-ui"; ctx.textAlign = "center";
+    ctx.fillText("Moon", moonX, midY + moonR + 20);
+    ctx.fillStyle = "#aaa"; ctx.font = "10px system-ui";
+    ctx.fillText("1,737 km", moonX, midY + moonR + 34);
+    ctx.fillStyle = "#ffd050"; ctx.font = "bold 11px system-ui"; ctx.textAlign = "center";
+    ctx.fillText("Sun is 109\u00d7 wider than Earth and 400\u00d7 wider than the Moon  \u2022  All drawn to the same scale", W / 2, H - 10);
+  }, []);
+  useEffect(() => { var c = canvasRef.current; if (!c) return; var r = c.getBoundingClientRect(); c.width = r.width; c.height = r.height; draw(); }, [draw]);
+  return React.createElement("canvas", { ref: canvasRef, style: { width: "100%", height: 220, borderRadius: 8, display: "block" } });
+}
+
+function DistanceComparison() {
+  const canvasRef = useRef(null);
+  const draw = useCallback(() => {
+    const c = canvasRef.current; if (!c) return;
+    const ctx = c.getContext("2d");
+    const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H); ctx.fillStyle = "#08081a"; ctx.fillRect(0, 0, W, H);
+    var marginL = 40, marginR = 20, rowW = W - marginL - marginR;
+    var ratio = Math.round(149600000 / 384400);
+    var targetRows = 32;
+    var emPx = rowW / (ratio / targetRows);
+    var actualRowUnits = rowW / emPx;
+    var actualRows = Math.ceil(ratio / actualRowUnits);
+    var refY = 30, refStartX = marginL, refEndX = marginL + emPx;
+    ctx.fillStyle = "#2868d0"; ctx.beginPath(); ctx.arc(refStartX, refY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#d0d0d0"; ctx.beginPath(); ctx.arc(refEndX, refY, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#70aaff"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(refStartX + 6, refY); ctx.lineTo(refEndX - 4, refY); ctx.stroke();
+    ctx.fillStyle = "#70aaff"; ctx.font = "bold 11px system-ui"; ctx.textAlign = "left";
+    ctx.fillText("Earth", refStartX - 4, refY - 12);
+    ctx.fillStyle = "#ddd"; ctx.textAlign = "left";
+    ctx.fillText("Moon", refEndX + 6, refY + 4);
+    ctx.fillStyle = "#70aaff"; ctx.textAlign = "center";
+    ctx.fillText("384,400 km", (refStartX + refEndX) / 2, refY - 12);
+    var snakeStartY = refY + 30, rowH = 8, rowGap = 4;
+    var availableH = H - snakeStartY - 50;
+    var maxRows = Math.floor(availableH / (rowH + rowGap));
+    var drawRows = Math.min(actualRows, maxRows);
+    ctx.fillStyle = "#2868d0"; ctx.beginPath(); ctx.arc(marginL, snakeStartY, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#ffc830"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(marginL + 5, snakeStartY);
+    for (var i = 0; i < drawRows; i++) {
+      var y = snakeStartY + i * (rowH + rowGap);
+      var goingRight = i % 2 === 0;
+      var endX = goingRight ? marginL + rowW : marginL;
+      if (i === 0) {
+        ctx.lineTo(endX, y);
+      } else {
+        var prevY = snakeStartY + (i - 1) * (rowH + rowGap);
+        var wasRight = (i - 1) % 2 === 0;
+        var turnX = wasRight ? marginL + rowW : marginL;
+        var midTurnY = (prevY + y) / 2;
+        var turnRadius = (rowH + rowGap) / 2;
+        if (wasRight) {
+          ctx.arc(turnX, midTurnY, turnRadius, -Math.PI / 2, Math.PI / 2, false);
+        } else {
+          ctx.arc(turnX, midTurnY, turnRadius, -Math.PI / 2, Math.PI / 2, true);
+        }
+        ctx.lineTo(endX, y);
+      }
+    }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,200,48,0.5)"; ctx.font = "9px system-ui";
+    var markerStep = Math.max(1, Math.floor(drawRows / 6));
+    for (var j = markerStep; j < drawRows; j += markerStep) {
+      var ry = snakeStartY + j * (rowH + rowGap);
+      var unitsAtRow = Math.round(j * actualRowUnits);
+      ctx.textAlign = "right";
+      ctx.fillText("\u00d7" + unitsAtRow, marginL - 6, ry + 4);
+    }
+    if (actualRows > maxRows) {
+      var remaining = actualRows - drawRows;
+      var lastRowY = snakeStartY + (drawRows - 1) * (rowH + rowGap);
+      var dotBaseY = lastRowY + (rowH + rowGap) + 2;
+      ctx.fillStyle = "#ffc830";
+      for (var d = 0; d < 3; d++) { ctx.beginPath(); ctx.arc(W / 2, dotBaseY + d * 7, 2, 0, Math.PI * 2); ctx.fill(); }
+      var sunY = dotBaseY + 28;
+      var sunGrad = ctx.createRadialGradient(W / 2, sunY, 3, W / 2, sunY, 12);
+      sunGrad.addColorStop(0, "#fff8d8"); sunGrad.addColorStop(0.7, "#ffc830"); sunGrad.addColorStop(1, "rgba(255,200,48,0)");
+      ctx.fillStyle = sunGrad; ctx.beginPath(); ctx.arc(W / 2, sunY, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff8d8"; ctx.beginPath(); ctx.arc(W / 2, sunY, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffd050"; ctx.font = "bold 11px system-ui"; ctx.textAlign = "center";
+      ctx.fillText("+ " + remaining + " more rows to reach the Sun!", W / 2, sunY + 22);
+    } else {
+      var lx = drawRows % 2 === 0 ? marginL : marginL + rowW;
+      var ly = snakeStartY + (drawRows - 1) * (rowH + rowGap);
+      var sg2 = ctx.createRadialGradient(lx, ly, 3, lx, ly, 12);
+      sg2.addColorStop(0, "#fff8d8"); sg2.addColorStop(0.7, "#ffc830"); sg2.addColorStop(1, "rgba(255,200,48,0)");
+      ctx.fillStyle = sg2; ctx.beginPath(); ctx.arc(lx, ly, 12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff8d8"; ctx.beginPath(); ctx.arc(lx, ly, 7, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = "#ffd050"; ctx.font = "bold 13px system-ui"; ctx.textAlign = "center";
+    ctx.fillText("Earth \u2192 Sun = " + ratio + "\u00d7 the Earth\u2013Moon distance (149,600,000 km)", W / 2, H - 8);
+  }, []);
+  useEffect(() => { var c = canvasRef.current; if (!c) return; var r = c.getBoundingClientRect(); c.width = r.width; c.height = r.height; draw(); }, [draw]);
+  return React.createElement("canvas", { ref: canvasRef, style: { width: "100%", height: 480, borderRadius: 8, display: "block" } });
+}
+
+function ShadowAndMoonView({ phase, setPhase }) {
+  const diagRef = useRef(null);
+  const moonRef = useRef(null);
+  var getMoonState = function(p) {
+    if (p < 0.28) return { zone: "none", coverage: 0, label: "Full Moon \u2014 no eclipse" };
+    if (p < 0.38) return { zone: "penumbra", coverage: (p - 0.28) / 0.10, label: "Penumbral eclipse \u2014 slight dimming" };
+    if (p < 0.44) return { zone: "partial", coverage: (p - 0.38) / 0.06, label: "Partial eclipse \u2014 shadow creeping across" };
+    if (p < 0.56) return { zone: "total", coverage: 1, label: "\uD83D\uDD34 TOTAL ECLIPSE \u2014 Blood Moon!" };
+    if (p < 0.62) return { zone: "partial", coverage: 1 - (p - 0.56) / 0.06, label: "Partial eclipse \u2014 shadow retreating" };
+    if (p < 0.72) return { zone: "penumbra", coverage: 1 - (p - 0.62) / 0.10, label: "Penumbral eclipse \u2014 slight dimming" };
+    return { zone: "none", coverage: 0, label: "Full Moon \u2014 no eclipse" };
+  };
+  const state = getMoonState(phase);
+
+  const drawDiagram = useCallback(() => {
+    const c = diagRef.current; if (!c) return;
+    const ctx = c.getContext("2d"); const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H); ctx.fillStyle = "#06061a"; ctx.fillRect(0, 0, W, H);
+    var midY = H / 2 + 5, sunR = 70, sunX = -sunR + 35;
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,230,100,0.35)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(sunX + sunR, midY - sunR * 0.85); ctx.lineTo(W + 20, midY - 10); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sunX + sunR, midY + sunR * 0.85); ctx.lineTo(W + 20, midY + 10); ctx.stroke();
+    for (var i = -6; i <= 6; i++) {
+      var yS = midY + i * (sunR * 0.12); var al = 0.08 + 0.04 * Math.cos(i * 0.4);
+      ctx.strokeStyle = "rgba(255,230,100," + al + ")"; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(sunX + sunR, yS); ctx.lineTo(W, midY + i * 3); ctx.stroke();
+    }
+    ctx.restore();
+    var earthX = W * 0.30, earthR = 26;
+    var umbraTipX = earthX + earthR + (W - earthX) * 0.72;
+    ctx.save(); ctx.fillStyle = "rgba(80,40,20,0.18)"; ctx.beginPath();
+    ctx.moveTo(earthX + earthR * 0.6, midY - earthR * 1.55); ctx.lineTo(W + 10, midY - earthR * 0.2);
+    ctx.lineTo(W + 10, midY + earthR * 0.2); ctx.lineTo(earthX + earthR * 0.6, midY + earthR * 1.55);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.strokeStyle = "rgba(200,150,80,0.3)"; ctx.lineWidth = 1; ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(earthX + earthR * 0.6, midY - earthR * 1.55); ctx.lineTo(W + 10, midY - earthR * 0.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(earthX + earthR * 0.6, midY + earthR * 1.55); ctx.lineTo(W + 10, midY + earthR * 0.2); ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
+    ctx.save(); ctx.fillStyle = "rgba(20,5,5,0.55)"; ctx.beginPath();
+    ctx.moveTo(earthX + earthR * 0.6, midY - earthR * 0.93); ctx.lineTo(umbraTipX, midY);
+    ctx.lineTo(earthX + earthR * 0.6, midY + earthR * 0.93); ctx.closePath(); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.strokeStyle = "rgba(255,200,120,0.35)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(earthX + earthR * 0.6, midY - earthR * 0.93); ctx.lineTo(umbraTipX, midY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(earthX + earthR * 0.6, midY + earthR * 0.93); ctx.lineTo(umbraTipX, midY); ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = "rgba(255,255,255,0.55)"; ctx.font = "bold 11px system-ui"; ctx.textAlign = "center";
+    var umbLX = earthX + (umbraTipX - earthX) * 0.45;
+    ctx.fillText("UMBRA", umbLX, midY - 4);
+    ctx.font = "10px system-ui"; ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.fillText("(dark shadow)", umbLX, midY + 10);
+    ctx.fillStyle = "rgba(255,255,255,0.45)"; ctx.font = "bold 10px system-ui";
+    var penLX = earthX + (W - earthX) * 0.55;
+    ctx.fillText("PENUMBRA", penLX, midY + earthR * 1.3 + 16);
+    ctx.font = "9px system-ui"; ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.fillText("(partial shadow)", penLX, midY + earthR * 1.3 + 29);
+    var atG = ctx.createRadialGradient(earthX, midY, earthR, earthX, midY, earthR + 7);
+    atG.addColorStop(0, "rgba(80,160,255,0.4)"); atG.addColorStop(0.5, "rgba(220,110,50,0.3)"); atG.addColorStop(1, "rgba(220,80,30,0)");
+    ctx.fillStyle = atG; ctx.beginPath(); ctx.arc(earthX, midY, earthR + 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#2868d0"; ctx.beginPath(); ctx.arc(earthX, midY, earthR, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#38b060";
+    ctx.beginPath(); ctx.arc(earthX - 6, midY - 4, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(earthX + 7, midY + 6, 6, 0, Math.PI * 2); ctx.fill();
+    var orbitRadius = W * 0.38, arcSpanDeg = 70, arcStartDeg = arcSpanDeg / 2;
+    var angleDeg = arcStartDeg - phase * arcSpanDeg;
+    var angleRad = (angleDeg * Math.PI) / 180;
+    var moonX = earthX + Math.cos(angleRad) * orbitRadius;
+    var moonY = midY - Math.sin(angleRad) * orbitRadius;
+    var moonR = 9;
+    ctx.save(); ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 1; ctx.setLineDash([3, 5]);
+    ctx.beginPath();
+    ctx.arc(earthX, midY, orbitRadius, (-arcSpanDeg / 2 * Math.PI) / 180, (arcSpanDeg / 2 * Math.PI) / 180);
+    ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+    if (state.zone === "total" || state.zone === "partial") {
+      var inten = state.zone === "total" ? 1 : state.coverage;
+      ctx.save(); ctx.globalAlpha = 0.5 * inten;
+      ctx.strokeStyle = "#ee4422"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      ctx.beginPath(); ctx.moveTo(earthX - earthR * 0.4, midY - earthR - 5);
+      ctx.quadraticCurveTo(earthX + (moonX - earthX) * 0.35, midY - earthR * 2.2, moonX, moonY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(earthX - earthR * 0.4, midY + earthR + 5);
+      ctx.quadraticCurveTo(earthX + (moonX - earthX) * 0.35, midY + earthR * 2.2, moonX, moonY); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+      ctx.fillStyle = "rgba(238,100,60," + (0.8 * inten) + ")"; ctx.font = "bold 10px system-ui"; ctx.textAlign = "center";
+      var lRX = earthX + (moonX - earthX) * 0.25, lRY = midY - earthR * 2.0;
+      ctx.fillText("Red light bends", lRX, lRY - 6); ctx.fillText("through atmosphere", lRX, lRY + 7);
+    }
+    var mFill = "#d8d8d0";
+    if (state.zone === "total") {
+      var mg = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, moonR);
+      mg.addColorStop(0, "#dd5533"); mg.addColorStop(0.6, "#aa2800"); mg.addColorStop(1, "#661500"); mFill = mg;
+    } else if (state.zone === "partial") {
+      var v = state.coverage;
+      mFill = "rgb(" + Math.round(216) + "," + Math.round(85 * v + 216 * (1 - v)) + "," + Math.round(51 * v + 208 * (1 - v)) + ")";
+    } else if (state.zone === "penumbra") {
+      var dm = Math.round(216 - state.coverage * 50); mFill = "rgb(" + dm + "," + dm + "," + (dm - 8) + ")";
+    }
+    ctx.fillStyle = mFill; ctx.beginPath(); ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 0.5; ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffd050"; ctx.font = "bold 12px system-ui"; ctx.fillText("Sun \u2600\uFE0F", sunX + sunR + 14, 20);
+    ctx.fillStyle = "#70aaff"; ctx.fillText("Earth", earthX, midY - earthR - 14);
+    ctx.fillStyle = "#eee"; ctx.font = "bold 11px system-ui"; ctx.fillText("Moon", moonX, moonY - moonR - 10);
+    var sGr = ctx.createRadialGradient(sunX, midY, sunR * 0.7, sunX, midY, sunR * 1.15);
+    sGr.addColorStop(0, "#fffde0"); sGr.addColorStop(0.85, "#ffc830"); sGr.addColorStop(1, "rgba(255,150,0,0)");
+    ctx.fillStyle = sGr; ctx.beginPath(); ctx.arc(sunX, midY, sunR * 1.15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff8d8"; ctx.beginPath(); ctx.arc(sunX, midY, sunR, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.font = "italic 9px system-ui"; ctx.textAlign = "right";
+    ctx.fillText("Not to scale \u2014 sizes exaggerated for clarity", W - 8, H - 6);
+  }, [phase, state]);
+
+  const drawMoon = useCallback(() => {
+    const c = moonRef.current; if (!c) return;
+    const ctx = c.getContext("2d"); const W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H); ctx.fillStyle = "#04040e"; ctx.fillRect(0, 0, W, H);
+    var rng = function(s) { var x = Math.sin(s) * 43758.5453; return x - Math.floor(x); };
+    for (var i = 0; i < 60; i++) {
+      ctx.fillStyle = "rgba(255,255,255," + (0.2 + rng(i * 5.7) * 0.5) + ")";
+      ctx.beginPath(); ctx.arc(rng(i * 9.1) * W, rng(i * 11.3) * H, 0.4 + rng(i * 2.9) * 0.5, 0, Math.PI * 2); ctx.fill();
+    }
+    var mR = 58, cx = W / 2, cy = H / 2 - 5;
+    ctx.fillStyle = "#e8e5d8"; ctx.beginPath(); ctx.arc(cx, cy, mR, 0, Math.PI * 2); ctx.fill();
+    var craters = [{x:-0.25,y:-0.15,r:0.12,c:"#ccc9bc"},{x:0.15,y:0.25,r:0.08,c:"#c2bfb2"},{x:-0.1,y:0.3,r:0.15,c:"#c8c5b8"},{x:0.3,y:-0.2,r:0.06,c:"#d8d5c8"},{x:-0.35,y:0.1,r:0.1,c:"#c0bdb0"},{x:0.05,y:-0.35,r:0.09,c:"#d0cdc0"}];
+    for (var ci = 0; ci < craters.length; ci++) {
+      var cr = craters[ci]; ctx.fillStyle = cr.c;
+      ctx.beginPath(); ctx.arc(cx + cr.x * mR, cy + cr.y * mR, cr.r * mR, 0, Math.PI * 2); ctx.fill();
+    }
+    if (state.zone === "penumbra") {
+      ctx.fillStyle = "rgba(0,0,0," + (0.2 * state.coverage) + ")";
+      ctx.beginPath(); ctx.arc(cx, cy, mR, 0, Math.PI * 2); ctx.fill();
+    } else if (state.zone === "partial") {
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, mR, 0, Math.PI * 2); ctx.clip();
+      var so = mR * 2 * (1 - state.coverage);
+      ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.beginPath(); ctx.arc(cx + so, cy, mR * 1.05, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(200,55,15," + (0.5 * state.coverage) + ")";
+      ctx.beginPath(); ctx.arc(cx + so, cy, mR * 1.05, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    } else if (state.zone === "total") {
+      ctx.fillStyle = "rgba(0,0,0,0.65)"; ctx.beginPath(); ctx.arc(cx, cy, mR, 0, Math.PI * 2); ctx.fill();
+      var rg = ctx.createRadialGradient(cx - mR * 0.1, cy - mR * 0.1, 0, cx, cy, mR);
+      rg.addColorStop(0, "rgba(220,70,25,0.8)"); rg.addColorStop(0.5, "rgba(180,45,12,0.7)"); rg.addColorStop(1, "rgba(110,18,5,0.9)");
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(cx, cy, mR, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.textAlign = "center"; ctx.font = "bold 13px system-ui";
+    if (state.zone === "total") { ctx.fillStyle = "#ee6644"; ctx.fillText("\uD83D\uDD34 Blood Moon", cx, cy + mR + 24); }
+    else if (state.zone === "partial") { ctx.fillStyle = "#eea060"; ctx.fillText("Partial eclipse (" + Math.round(state.coverage * 100) + "%)", cx, cy + mR + 24); }
+    else if (state.zone === "penumbra") { ctx.fillStyle = "#bbb"; ctx.fillText("Penumbral \u2014 slight dimming", cx, cy + mR + 24); }
+    else { ctx.fillStyle = "#ddd"; ctx.fillText("Full Moon", cx, cy + mR + 24); }
+    ctx.fillStyle = "rgba(255,255,255,0.35)"; ctx.font = "11px system-ui";
+    ctx.fillText("\uD83D\uDC41\uFE0F View from Earth", cx, H - 8);
+  }, [phase, state]);
+
+  useEffect(() => {
+    var setup = function(ref) { if (!ref.current) return; var r = ref.current.getBoundingClientRect(); ref.current.width = r.width; ref.current.height = r.height; };
+    setup(diagRef); setup(moonRef); drawDiagram(); drawMoon();
+  }, [drawDiagram, drawMoon]);
+  useEffect(() => { drawDiagram(); drawMoon(); }, [phase, drawDiagram, drawMoon]);
+
+  return (
+    <div>
+      <p style={{ fontSize: 13, color: "#ddd", margin: "0 0 10px", lineHeight: 1.6 }}>
+        Drag the slider to move the Moon along its orbit through Earth's shadow. The diagram (top) shows the shadow geometry, and the circle (bottom) shows what the Moon looks like from Earth at the same moment.
+      </p>
+      <canvas ref={diagRef} style={{ width: "100%", height: 280, borderRadius: "8px 8px 0 0", border: "1px solid rgba(255,255,255,0.1)" }} />
+      <canvas ref={moonRef} style={{ width: "100%", height: 210, borderRadius: "0 0 8px 8px", borderLeft: "1px solid rgba(255,255,255,0.1)", borderRight: "1px solid rgba(255,255,255,0.1)", borderBottom: "1px solid rgba(255,255,255,0.1)" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+        <span style={{ fontSize: 12, color: "#ccc" }}>{"\uD83C\uDF15 Before"}</span>
+        <input type="range" min="0" max="1" step="0.003" value={phase} onChange={function(e) { setPhase(parseFloat(e.target.value)); }} style={{ flex: 1 }} />
+        <span style={{ fontSize: 12, color: "#ccc" }}>{"After \uD83C\uDF15"}</span>
+      </div>
+      <p style={{
+        textAlign: "center", fontSize: 14, fontWeight: 700, marginTop: 8,
+        color: state.zone === "total" ? "#ee5533" : state.zone === "partial" ? "#eea060" : "#bbb",
+        padding: "6px 12px", background: state.zone === "total" ? "rgba(238,68,34,0.12)" : "transparent", borderRadius: 8,
+      }}>{state.label}</p>
+    </div>
+  );
+}
+
+function WhyRedPanel() {
+  return (
+    <div style={{ padding: 16, background: "rgba(220,70,30,0.1)", borderRadius: 10, border: "1px solid rgba(220,70,30,0.25)" }}>
+      <h3 style={{ margin: "0 0 10px", color: "#ee6644", fontSize: 16 }}>{"\uD83D\uDD34 Why does the Moon turn red, not black?"}</h3>
+      <p style={{ margin: "0 0 12px", fontSize: 14, color: "#ddd", lineHeight: 1.7 }}>
+        {"You might expect the Moon to disappear completely inside Earth\u2019s shadow. But it doesn\u2019t \u2014 it glows a deep coppery red. Earth\u2019s shadow is "}<em>not</em>{" an ordinary shadow, because our planet has an "}<strong>atmosphere</strong>.
+      </p>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "12px 0" }}>
+        <div style={{ flex: 1, minWidth: 160, padding: 12, background: "rgba(70,130,255,0.1)", borderRadius: 8, border: "1px solid rgba(70,130,255,0.2)" }}>
+          <p style={{ margin: 0, fontSize: 13, color: "#90bbff", lineHeight: 1.65 }}>
+            <strong style={{ fontSize: 14 }}>Blue light</strong>{" has a short wavelength. It gets "}<strong>scattered</strong>{" in all directions by Earth\u2019s atmosphere. This is why the sky looks blue \u2014 and why very little blue light makes it through to the Moon."}
+          </p>
+        </div>
+        <div style={{ flex: 1, minWidth: 160, padding: 12, background: "rgba(238,80,30,0.1)", borderRadius: 8, border: "1px solid rgba(238,80,30,0.2)" }}>
+          <p style={{ margin: 0, fontSize: 13, color: "#ee9977", lineHeight: 1.65 }}>
+            <strong style={{ fontSize: 14 }}>Red light</strong>{" has a longer wavelength. It passes through the atmosphere and gets "}<strong>refracted (bent)</strong>{" inward toward the Moon \u2014 like a sunset wrapping all the way around the Earth."}
+          </p>
+        </div>
+      </div>
+      <p style={{ margin: "12px 0 0", fontSize: 14, color: "#ddd", lineHeight: 1.7 }}>
+        {"\uD83D\uDCA1 If you stood on the Moon during totality, you\u2019d see the dark Earth surrounded by a "}<strong>bright ring of red-orange light</strong>{" \u2014 every sunrise and sunset on Earth happening at once around its edge!"}
+      </p>
+    </div>
+  );
+}
+
+function KeyNumbers() {
+  var items = [
+    { label: "Sun diameter", value: "1,392,680 km", color: "#ffd050" },
+    { label: "Earth diameter", value: "12,742 km", color: "#70aaff" },
+    { label: "Moon diameter", value: "3,474 km", color: "#ddd" },
+    { label: "Sun is", value: "109\u00d7 wider than Earth", color: "#ffd050" },
+    { label: "Earth \u2192 Moon", value: "384,400 km", color: "#70aaff" },
+    { label: "Earth \u2192 Sun", value: "149,600,000 km", color: "#ffd050" },
+    { label: "Sun is ~400\u00d7 wider than Moon", value: "...and ~400\u00d7 further away!", color: "#ee9977" },
+    { label: "3 Mar 2026 totality", value: "58 min 18 sec", color: "#ee6644" },
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+      {items.map(function(it, i) {
+        return (<div key={i} style={{ padding: 10, background: "rgba(255,255,255,0.06)", borderRadius: 8, gridColumn: i === 6 ? "span 2" : undefined, border: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ color: "#aaa", fontSize: 11, marginBottom: 2 }}>{it.label}</div>
+          <div style={{ color: it.color, fontWeight: 700, fontSize: 14 }}>{it.value}</div>
+        </div>);
+      })}
+    </div>
+  );
+}
+
+function LunarEclipseSim() {
+  const [phase, setPhase] = useState(0);
+  return (
+    <div style={{ fontFamily: "system-ui, sans-serif", maxWidth: 720, margin: "0 auto", padding: 20, background: "#0a0a1e", minHeight: "100vh", color: "#eee" }}>
+      <h2 style={{ textAlign: "center", color: "#ffd050", margin: "0 0 4px", fontSize: 22 }}>
+        {"\uD83C\uDF11 Lunar Eclipse \u2014 3 March 2026"}
+      </h2>
+      <p style={{ textAlign: "center", color: "#aaa", margin: "0 0 24px", fontSize: 14 }}>
+        The most recent total lunar eclipse, visible from Auckland, NZ
+      </p>
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ color: "#ffd050", fontSize: 15, margin: "0 0 8px" }}>{"\uD83D\uDCCF Relative Sizes"}</h3>
+        <SizeComparison />
+        <p style={{ fontSize: 12, color: "#999", margin: "6px 0 0", lineHeight: 1.5 }}>
+          {"All three bodies are drawn to the same scale. The Sun\u2019s surface curves away to the left \u2014 most of it is off-screen!"}
+        </p>
+      </div>
+      <div style={{ marginBottom: 24 }}>
+        <h3 style={{ color: "#ffd050", fontSize: 15, margin: "0 0 8px" }}>{"\uD83D\uDCD0 Relative Distances"}</h3>
+        <DistanceComparison />
+      </div>
+      <div style={{ marginBottom: 24, background: "rgba(255,255,255,0.02)", borderRadius: 12, padding: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
+        <h3 style={{ color: "#ffd050", fontSize: 15, margin: "0 0 8px" }}>{"\uD83D\uDD2D Shadow Diagram & View from Earth"}</h3>
+        <ShadowAndMoonView phase={phase} setPhase={setPhase} />
+      </div>
+      <div style={{ marginBottom: 24 }}><WhyRedPanel /></div>
+      <div style={{ marginBottom: 24, padding: 16, background: "rgba(255,255,255,0.03)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)" }}>
+        <h3 style={{ color: "#70aaff", fontSize: 15, margin: "0 0 10px" }}>{"\uD83D\uDCCA Key Numbers"}</h3>
+        <KeyNumbers />
+      </div>
+      <div style={{ padding: 16, background: "rgba(255,255,255,0.03)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)" }}>
+        <h3 style={{ color: "#ee6644", fontSize: 15, margin: "0 0 8px" }}>{"\uD83D\uDCF8 The 3 March 2026 Eclipse"}</h3>
+        <p style={{ fontSize: 13, color: "#ccc", margin: 0, lineHeight: 1.6 }}>
+          {"This was the third consecutive total lunar eclipse (after March and September 2025) and the last until New Year\u2019s Eve 2028. Totality lasted 58 minutes and 18 seconds. The Moon passed just inside the umbra, giving it a lighter copper-red tone rather than deep crimson."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(React.createElement(LunarEclipseSim), document.getElementById("root"));
+</script>
+</body>
+</html>
