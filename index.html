@@ -3,22 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulations</title>
+    <title>Interactive Simulations</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-        h1 { text-align: center; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 20px 0; }
-        a { display: block; padding: 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-size: 18px; }
-        a:hover { background: #0056b3; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f1729;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* Subtle star-field background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 25% 55%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 40% 15%, rgba(255,255,255,0.25), transparent),
+                radial-gradient(1px 1px at 55% 70%, rgba(255,255,255,0.35), transparent),
+                radial-gradient(1px 1px at 70% 35%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.25), transparent),
+                radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.35), transparent),
+                radial-gradient(1px 1px at 35% 90%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1.5px 1.5px at 5% 50%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1.5px 1.5px at 48% 5%, rgba(255,255,255,0.45), transparent),
+                radial-gradient(1.5px 1.5px at 78% 60%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1.5px 1.5px at 92% 42%, rgba(255,255,255,0.35), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 60px 24px 40px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        header h1 {
+            font-size: 2em;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1em;
+            color: #8899bb;
+            line-height: 1.5;
+        }
+
+        .sim-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sim-card {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 24px 28px;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sim-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .sim-card .icon {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .sim-card .title {
+            font-size: 1.15em;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+
+        .sim-card .desc {
+            font-size: 0.88em;
+            color: #8899bb;
+            line-height: 1.5;
+        }
+
+        .sim-card .arrow {
+            position: absolute;
+            right: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.15);
+            transition: all 0.25s ease;
+        }
+
+        .sim-card:hover .arrow {
+            color: rgba(255, 255, 255, 0.5);
+            right: 20px;
+        }
+
+        /* Colour accents per card */
+        .sim-card.plants { border-left: 3px solid #3cb44b; }
+        .sim-card.plants:hover { background: rgba(60, 180, 75, 0.06); border-color: rgba(60, 180, 75, 0.2); border-left-color: #3cb44b; }
+
+        .sim-card.eclipse { border-left: 3px solid #dd6644; }
+        .sim-card.eclipse:hover { background: rgba(220, 100, 65, 0.06); border-color: rgba(220, 100, 65, 0.2); border-left-color: #dd6644; }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            color: #556680;
+            font-size: 0.82em;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 40px 16px 30px; }
+            header h1 { font-size: 1.6em; }
+            .sim-card { padding: 20px 22px; }
+        }
     </style>
 </head>
 <body>
-    <h1>Interactive Simulations</h1>
-    <ul>
-        <li><a href="growing-plants/">Growing plants</a></li>
-        <li><a href="lunar-eclipse/">Lunar eclipse</a></li>
-        <!-- Add more <li> entries for additional sims -->
-    </ul>
+    <div class="container">
+        <header>
+            <h1>Interactive Simulations</h1>
+            <p>Explore science concepts through hands-on browser simulations</p>
+        </header>
+
+        <ul class="sim-list">
+            <li>
+                <a href="growing-plants/" class="sim-card plants">
+                    <span class="icon">🌱</span>
+                    <div class="title">Growing Plants</div>
+                    <div class="desc">Investigate how the amount of water affects plant growth over time. Run trials, record results, and calculate averages.</div>
+                    <span class="arrow">→</span>
+                </a>
+            </li>
+            <li>
+                <a href="lunar-eclipse/" class="sim-card eclipse">
+                    <span class="icon">🌑</span>
+                    <div class="title">Lunar Eclipse</div>
+                    <div class="desc">Explore the March 2026 total lunar eclipse — see true-scale sizes and distances, shadow geometry, and why the Moon turns red.</div>
+                    <span class="arrow">→</span>
+                </a>
+            </li>
+            <!-- Add more <li> entries for additional sims -->
+        </ul>
+
+        <footer>
+            Science simulations for the classroom
+        </footer>
+    </div>
 </body>
 </html>
