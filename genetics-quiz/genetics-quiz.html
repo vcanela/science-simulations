@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genetics & Patterns of Inheritance Quiz</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; }
+  header { background: linear-gradient(135deg, #2d6a4f, #52b788); color: white; padding: 24px; text-align: center; }
+  header h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  header p { font-size: 0.9rem; opacity: 0.88; }
+
+  #quiz-container { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  #dot-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+  .dot {
+    width: 32px; height: 32px; border-radius: 50%; background: #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; color: #718096; border: 2px solid #cbd5e0;
+    transition: all 0.3s;
+  }
+  .dot.active { background: #52b788; color: white; border-color: #2d6a4f; transform: scale(1.15); }
+  .dot.correct { background: #22c55e; color: white; border-color: #16a34a; }
+  .dot.incorrect { background: #ef4444; color: white; border-color: #dc2626; }
+
+  #q-card {
+    background: white; border-radius: 16px; padding: 28px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.09); border-left: 6px solid #52b788;
+    transition: border-color 0.4s, box-shadow 0.4s;
+  }
+  #q-card.correct  { border-left-color: #22c55e; box-shadow: 0 2px 20px rgba(34,197,94,0.18); }
+  #q-card.incorrect{ border-left-color: #ef4444; box-shadow: 0 2px 20px rgba(239,68,68,0.18); }
+
+  #q-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  #q-num  { font-size: 0.72rem; font-weight: 700; color: #52b788; text-transform: uppercase; letter-spacing: 1px; }
+  #q-topic{ font-size: 0.72rem; background: #d1fae5; color: #2d6a4f; padding: 2px 10px; border-radius: 20px; }
+  #q-text { font-size: 1rem; font-weight: 600; line-height: 1.55; margin-bottom: 20px; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px;
+    padding: 12px 16px; text-align: left; cursor: pointer; font-size: 0.91rem;
+    transition: all 0.2s; line-height: 1.45;
+  }
+  .option-btn:hover:not(:disabled) { background: #d1fae5; border-color: #52b788; }
+  .option-btn.correct-ans { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: 600; pointer-events: none; }
+  .option-btn.wrong-ans   { background: #fee2e2; border-color: #ef4444; color: #991b1b; pointer-events: none; }
+  .option-btn:disabled { cursor: default; opacity: 0.7; }
+
+  #feedback-box {
+    margin-top: 16px; padding: 12px 16px; border-radius: 10px;
+    font-size: 0.88rem; line-height: 1.55; display: none;
+  }
+  #feedback-box.correct  { display:block; background:#dcfce7; color:#166534; border:1px solid #86efac; }
+  #feedback-box.incorrect{ display:block; background:#fff7ed; color:#92400e; border:1px solid #fcd34d; }
+
+  #next-btn {
+    display: none; margin-top: 20px; width: 100%;
+    background: #2d6a4f; color: white; border: none; border-radius: 10px;
+    padding: 13px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    transition: background 0.2s;
+  }
+  #next-btn:hover { background: #1b4332; }
+
+  #results {
+    display: none; background: white; border-radius: 16px; padding: 36px 24px;
+    text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 8px;
+  }
+  #results h2 { font-size: 1.5rem; margin-bottom: 6px; }
+  #score-display { font-size: 3.2rem; font-weight: 800; color: #2d6a4f; margin: 12px 0; }
+  #results-msg { color: #4a5568; margin-bottom: 18px; font-size: 0.95rem; }
+  .score-bar-wrap { background: #e2e8f0; border-radius: 10px; height: 14px; margin: 8px 0 24px; overflow: hidden; }
+  .score-bar { height: 14px; border-radius: 10px; background: linear-gradient(90deg,#52b788,#2d6a4f); transition: width 1s ease; }
+
+  .topic-breakdown h3 { font-size: 0.82rem; color:#718096; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; text-align:left; }
+  .topic-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #f0f4f8; font-size:0.86rem; text-align:left; }
+  .topic-row span:last-child { font-weight:700; color:#2d6a4f; }
+
+  #restart-btn {
+    margin-top: 24px; background: #2d6a4f; color: white; border: none;
+    border-radius: 10px; padding: 13px 36px; font-size: 1rem;
+    cursor: pointer; font-weight: 700;
+  }
+  #restart-btn:hover { background: #1b4332; }
+
+  @media(max-width:560px){ header h1{font-size:1.25rem;} #q-card{padding:20px 16px;} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧬 Genetics & Patterns of Inheritance</h1>
+  <p>Monohybrid Inheritance · Dominance · Genotypes · Phenotypes · Pedigrees</p>
+</header>
+
+<div id="quiz-container">
+  <div id="dot-row"></div>
+
+  <div id="q-card">
+    <div id="q-meta">
+      <span id="q-num"></span>
+      <span id="q-topic"></span>
+    </div>
+    <div id="q-text"></div>
+    <div class="options" id="opts"></div>
+    <div id="feedback-box"></div>
+    <button id="next-btn" onclick="nextQuestion()">Next Question →</button>
+  </div>
+
+  <div id="results">
+    <h2>Quiz Complete! 🎉</h2>
+    <div id="score-display"></div>
+    <div class="score-bar-wrap"><div class="score-bar" id="score-bar"></div></div>
+    <p id="results-msg"></p>
+    <div class="topic-breakdown" id="topic-breakdown"></div>
+    <button id="restart-btn" onclick="restartQuiz()">Try Again</button>
+  </div>
+</div>
+
+<script>
+const allQuestions = [
+  // KEY TERMS
+  { topic:"Key Terms", q:"What is genetics?", opts:["The study of how organisms adapt to their environment over time","The study of how traits are encoded in DNA and passed from generation to generation","The study of how mutations change the structure of chromosomes","The study of how phenotypes are influenced only by environmental factors"], ans:1, fb:"Genetics is the study of how traits are encoded in DNA and passed from generation to generation — including why you might share your parent's eye colour or height." },
+  { topic:"Key Terms", q:"What is a gene?", opts:["An alternative form of an allele found on a chromosome","A segment of DNA on a chromosome that codes for a specific trait","The complete set of observable characteristics of an organism","A diagram used to predict the genotypes of offspring"], ans:1, fb:"A gene is a segment of DNA on a chromosome that codes for a specific trait. Different versions of the same gene are called alleles." },
+  { topic:"Key Terms", q:"What is an allele?", opts:["A segment of DNA that codes for a protein","The full genetic makeup of an organism","An alternative form of a gene","A diagram showing inheritance across generations"], ans:2, fb:"An allele is an alternative form of a gene. For example, the gene for handedness has two alleles — one for right-handedness and one for left-handedness." },
+  { topic:"Key Terms", q:"What is a phenotype?", opts:["The allele combinations present in an organism's DNA","The set of observable characteristics of an individual resulting from the interaction of its genotype with the environment","The ratio of dominant to recessive alleles in a population","The process by which alleles are passed from parent to offspring"], ans:1, fb:"A phenotype is the set of observable characteristics resulting from the interaction of genotype with the environment — for example, eye colour, height, or handedness." },
+  { topic:"Key Terms", q:"What is a genotype?", opts:["The observable physical traits of an organism","The environment an organism lives in that shapes its traits","An organism's genetic makeup, or allele combinations","The ratio of dominant to recessive phenotypes in offspring"], ans:2, fb:"A genotype is an organism's genetic makeup — the specific allele combinations it carries, such as AA, Aa, or aa." },
+  { topic:"Key Terms", q:"What is a Punnett square?", opts:["A diagram that shows the occurrence of a genetic trait across several generations of a family","A chart used to classify organisms as homozygous or heterozygous","A method of predicting the genotypes and phenotypes of offspring in genetic crosses","A tool used to identify mutations in an organism's DNA"], ans:2, fb:"A Punnett square is a method of predicting the genotypes and phenotypes of offspring in genetic crosses. It is particularly useful for monohybrid crosses." },
+  { topic:"Key Terms", q:"What is a pedigree chart?", opts:["A square grid used to calculate phenotype ratios from a genetic cross","A diagram that shows the occurrence of a genetic trait in several generations of a family","A table that lists all possible allele combinations for a gene","A chart showing the DNA sequence of dominant and recessive alleles"], ans:1, fb:"A pedigree chart is a diagram that shows the occurrence of a genetic trait in several generations of a family — similar to a family tree, but tracking genetic traits." },
+  { topic:"Key Terms", q:"What is a monohybrid cross?", opts:["A cross between individuals that considers two genes with four possible alleles","A cross between a homozygous dominant and a homozygous recessive individual only","A cross between individuals that involves one gene for one characteristic with two alleles","A cross used only when both parents are heterozygous"], ans:2, fb:"A monohybrid cross involves one gene for one characteristic with two alleles — for example, crossing individuals for the handedness gene (R and r)." },
+  { topic:"Key Terms", q:"What is a test cross?", opts:["A cross between two heterozygous individuals to confirm phenotype ratios","A cross between two homozygous dominant individuals to produce pure breeding offspring","The crossing of an individual of unknown genotype with a homozygous recessive individual to determine the unknown genotype","A cross used to determine whether a trait is controlled by one gene or many genes"], ans:2, fb:"A test cross involves crossing an individual of unknown genotype with a homozygous recessive individual. The ratio of phenotypes in the offspring reveals the unknown genotype." },
+  { topic:"Key Terms", q:"What does 'pure breeding' mean?", opts:["Individuals that are heterozygous and produce varied offspring when crossed","Individuals that are homozygous and will always produce the same offspring when crossed together","Individuals that carry both a dominant and recessive allele for every gene","Individuals that only produce recessive offspring when crossed with any other individual"], ans:1, fb:"Pure breeding refers to homozygous individuals that always produce the same offspring when crossed, because they can only pass on one type of allele." },
+  { topic:"Key Terms", q:"What is a phenotype ratio?", opts:["The ratio of dominant alleles to recessive alleles in the parent generation","The ratio of genotypes expressed as 1:2:1 across offspring","A ratio totalling 4 that describes how many offspring express each phenotype, for example 3:1","The percentage of offspring that inherit a recessive allele from one parent"], ans:2, fb:"A phenotype ratio totals 4 — for example, a 3:1 ratio means three offspring express the dominant trait for every one that expresses the recessive trait." },
+  { topic:"Key Terms", q:"What is a genotype ratio?", opts:["3 dominant : 1 recessive, describing the phenotypes of offspring","1 homozygous dominant : 2 heterozygous : 1 homozygous recessive, written as 1:2:1","1 dominant allele : 1 recessive allele present in each offspring","2 heterozygous : 2 homozygous recessive, written as 2:2"], ans:1, fb:"The genotype ratio from a heterozygous cross (Aa × Aa) is 1:2:1 — one homozygous dominant (AA), two heterozygous (Aa), and one homozygous recessive (aa)." },
+  { topic:"Key Terms", q:"What does homozygous recessive mean?", opts:["Having one dominant and one recessive allele, so the dominant trait is expressed","Having two identical dominant alleles, so the dominant trait is always expressed","Having two identical recessive alleles, so the recessive trait is expressed","Having two different alleles, so the recessive trait is masked"], ans:2, fb:"Homozygous recessive (aa) means both alleles are recessive. With no dominant allele to mask them, the recessive trait is expressed in the phenotype." },
+  { topic:"Key Terms", q:"What does homozygous dominant mean?", opts:["Having two identical recessive alleles, so the recessive phenotype is expressed","Having one dominant and one recessive allele, so the dominant phenotype is expressed","Having two identical dominant alleles, so the dominant trait is expressed","Having two different alleles where neither is fully expressed"], ans:2, fb:"Homozygous dominant (AA) means both alleles are the same dominant version. The dominant trait is expressed in the phenotype." },
+  { topic:"Key Terms", q:"What does heterozygous mean?", opts:["Having two identical dominant alleles for a trait","Having two identical recessive alleles for a trait","Having two different alleles for a trait, where the dominant allele is expressed","Having no alleles for a trait, so neither phenotype is expressed"], ans:2, fb:"Heterozygous (Aa) means having two different alleles. The dominant allele is expressed in the phenotype, masking the recessive allele." },
+  // DEFINING ALLELES
+  { topic:"Defining Alleles", q:"A dominant allele is best described as an allele that:", opts:["is only expressed in the phenotype when two copies are present","is always expressed in the phenotype whenever the allele is present","is only expressed when no recessive allele is present in the gamete","always produces the same phenotype as the recessive allele"], ans:1, fb:"A dominant allele is always expressed in the phenotype when it is present — even a single copy is enough to show the trait." },
+  { topic:"Defining Alleles", q:"A recessive allele is an allele whose phenotypic effect:", opts:["is always observed in the organism when the allele is present","is observed in all heterozygous individuals","is not observed in a heterozygote","is expressed only when a dominant allele is also present"], ans:2, fb:"A recessive allele is not expressed in the phenotype of a heterozygote — it is masked by the dominant allele. It is only expressed when two copies are present." },
+  { topic:"Defining Alleles", q:"Which statement correctly distinguishes a dominant allele from a recessive allele?", opts:["A dominant allele requires two copies to be expressed; a recessive allele requires only one","A dominant allele is always expressed; a recessive allele is only expressed if no dominant allele is present","A dominant allele is expressed only in females; a recessive allele is expressed only in males","A dominant allele changes the genotype; a recessive allele changes the phenotype"], ans:1, fb:"Dominant alleles are expressed with just one copy; recessive alleles are only expressed when there is no dominant allele present (homozygous recessive genotype)." },
+  // HOMOZYGOUS & HETEROZYGOUS
+  { topic:"Homozygous & Heterozygous", q:"An organism described as homozygous dominant has a genotype of:", opts:["Aa","aa","AA","aA"], ans:2, fb:"Homozygous dominant means both alleles are the same dominant version, written as AA." },
+  { topic:"Homozygous & Heterozygous", q:"An organism that is heterozygous for a trait has:", opts:["two identical recessive alleles for the trait","two identical dominant alleles for the trait","one dominant and one recessive allele for the trait","no alleles for the trait"], ans:2, fb:"Heterozygous means having two different alleles for a trait (Aa). The dominant allele is expressed in the phenotype." },
+  { topic:"Homozygous & Heterozygous", q:"Two individuals have the same phenotype but different genotypes — one is AA and the other is Aa. This is possible because:", opts:["both alleles in AA are recessive, masking the dominant allele","the recessive allele in Aa is expressed alongside the dominant allele","the dominant allele in Aa is expressed in the phenotype, masking the recessive allele","homozygous and heterozygous genotypes always produce different phenotypes"], ans:2, fb:"In a heterozygous individual (Aa), the dominant allele masks the recessive allele — producing the same observable phenotype as a homozygous dominant individual (AA)." },
+  { topic:"Homozygous & Heterozygous", q:"A homozygous recessive individual (aa) differs from a heterozygous individual (Aa) because:", opts:["the homozygous recessive individual expresses the dominant trait","the homozygous recessive individual expresses the recessive trait, as there is no dominant allele to mask it","the heterozygous individual expresses the recessive trait, as both alleles are the same","both individuals always express the same phenotype"], ans:1, fb:"In a homozygous recessive individual (aa), both alleles are recessive. With no dominant allele present, the recessive trait is expressed in the phenotype." },
+  { topic:"Homozygous & Heterozygous", q:"Which of the following correctly lists all three possible genotypes for a gene with a dominant allele (A) and a recessive allele (a)?", opts:["AA, Aa, AA","Aa, aa, aA","AA, Aa, aa","AA, aa, aA"], ans:2, fb:"The three possible genotypes are homozygous dominant (AA), heterozygous (Aa), and homozygous recessive (aa)." },
+  // PURE BREEDING
+  { topic:"Pure Breeding", q:"Pure breeding individuals are best described as individuals that are:", opts:["heterozygous and will produce varied offspring when crossed","homozygous and will always produce the same offspring when crossed together","heterozygous and always express the dominant phenotype","homozygous recessive and always produce dominant offspring"], ans:1, fb:"Pure breeding refers to homozygous individuals that always produce the same offspring when crossed, as they can only pass on one type of allele." },
+  { topic:"Pure Breeding", q:"Why are pure breeding individuals considered 'pure'?", opts:["Because they carry both a dominant and recessive allele for every gene","Because they can only pass on one type of allele, producing consistent offspring","Because they only produce recessive offspring when crossed","Because their phenotype changes depending on the environment"], ans:1, fb:"Pure breeding individuals are homozygous, so they can only pass on one type of allele. Their offspring will consistently show the same trait." },
+  // PUNNETT SQUARES
+  { topic:"Punnett Squares", q:"Two heterozygous parents (Rr × Rr) are crossed. What is the expected phenotype ratio of their offspring?", opts:["1 dominant : 3 recessive","1 dominant : 1 recessive","3 dominant : 1 recessive","2 dominant : 2 recessive"], ans:2, fb:"A Rr × Rr cross produces RR, Rr, Rr, rr. Three offspring express the dominant trait and one expresses the recessive trait — a 3:1 phenotype ratio." },
+  { topic:"Punnett Squares", q:"When two heterozygous parents (Rr × Rr) are crossed, what is the expected genotype ratio?", opts:["1 RR : 1 Rr : 1 rr","2 RR : 1 Rr : 2 rr","1 RR : 2 Rr : 1 rr","3 RR : 1 rr"], ans:2, fb:"The genotype ratio from Rr × Rr is 1 RR : 2 Rr : 1 rr. Two of the four offspring are heterozygous." },
+  { topic:"Punnett Squares", q:"A homozygous dominant parent (RR) is crossed with a homozygous recessive parent (rr). What phenotype ratio is expected in the offspring?", opts:["3 dominant : 1 recessive","1 dominant : 1 recessive","All offspring express the recessive phenotype","All offspring express the dominant phenotype"], ans:3, fb:"RR × rr produces all Rr offspring. Since R is dominant, all offspring express the dominant phenotype — a 4:0 ratio." },
+  { topic:"Punnett Squares", q:"The allele for right-handedness (R) is dominant to left-handedness (r). A heterozygous mother (Rr) and heterozygous father (Rr) have a child. What is the probability the child is left-handed?", opts:["1 in 2 (50%)","1 in 4 (25%)","3 in 4 (75%)","0 — left-handedness cannot appear in this cross"], ans:1, fb:"From Rr × Rr, one in four offspring will be rr — the only genotype that produces the left-handed phenotype. That is a 25% (1 in 4) chance." },
+  { topic:"Punnett Squares", q:"In a Punnett square, the alleles written along the top and side represent:", opts:["the genotypes of the offspring","the possible gametes each parent can produce","the phenotype ratio of the offspring","the dominant and recessive traits expressed by the parents"], ans:1, fb:"The alleles along the top and side of a Punnett square represent the possible gametes each parent can produce. Each cell inside shows a possible genotype for the offspring." },
+  // TEST CROSS
+  { topic:"Test Cross", q:"A test cross involves crossing an individual of unknown genotype with:", opts:["a homozygous dominant individual","another individual of unknown genotype","a homozygous recessive individual","a heterozygous individual"], ans:2, fb:"A test cross involves crossing an individual of unknown genotype with a homozygous recessive individual (aa) to determine whether the unknown individual is AA or Aa." },
+  { topic:"Test Cross", q:"An individual showing the dominant phenotype is test crossed with a homozygous recessive individual. All offspring show the dominant phenotype. The most likely genotype of the unknown parent is:", opts:["homozygous recessive (aa)","heterozygous (Aa)","homozygous dominant (AA)","it is impossible to determine"], ans:2, fb:"If the unknown parent is AA, crossed with aa, all offspring will be Aa — all dominant. A heterozygous (Aa) parent would produce some recessive offspring." },
+  { topic:"Test Cross", q:"An individual showing the dominant phenotype is test crossed with a homozygous recessive individual. Half the offspring show the recessive phenotype. The unknown individual is most likely:", opts:["homozygous dominant (AA), as dominant alleles always mask recessive ones","homozygous recessive (aa), as recessive alleles were passed to offspring","heterozygous (Aa), as a 1:1 ratio of dominant to recessive offspring is expected from this cross","pure breeding, as some offspring expressed the dominant trait"], ans:2, fb:"A 1:1 ratio in a test cross indicates the unknown individual is heterozygous (Aa). An Aa × aa cross produces Aa and aa offspring in equal proportions." },
+  // SEX DETERMINATION
+  { topic:"Sex Determination", q:"Which sex chromosome combination determines biological sex as female?", opts:["XY","YY","XX","XO"], ans:2, fb:"XX sex chromosomes determine a female. Females produce gametes (eggs) that each carry one X chromosome." },
+  { topic:"Sex Determination", q:"Which of the following correctly describes sex determination in humans?", opts:["XX produces male gametes and XY produces female gametes","XX produces female gametes and XY produces male gametes","Both XX and XY produce the same type of gametes","Sex is determined solely by the mother's chromosomes"], ans:1, fb:"XX is female and XY is male. It is the father's sperm — carrying either an X or a Y chromosome — that determines the biological sex of the offspring." },
+  { topic:"Sex Determination", q:"A father produces two types of sperm: one carrying an X chromosome and one carrying a Y chromosome. What determines whether the offspring will be male or female?", opts:["Whether the mother's egg carries an X or a Y chromosome","Which type of sperm fertilises the egg — X-carrying sperm produces female, Y-carrying sperm produces male","Whether the father's genotype is homozygous or heterozygous","The phenotype ratio of the previous offspring"], ans:1, fb:"The mother always contributes an X chromosome. X-carrying sperm → XX (female); Y-carrying sperm → XY (male)." },
+  { topic:"Sex Determination", q:"What is the expected ratio of male to female offspring from any human pregnancy?", opts:["3 female : 1 male","1 female : 1 male","2 female : 1 male","All offspring will be the same sex"], ans:1, fb:"Since fathers produce equal numbers of X-carrying and Y-carrying sperm, the expected ratio of female (XX) to male (XY) offspring is 1:1." },
+  // PEDIGREE CHARTS
+  { topic:"Pedigree Charts", q:"In a pedigree chart, how are females and males represented respectively?", opts:["Squares for females and circles for males","Circles for females and squares for males","Triangles for females and circles for males","Diamonds for females and squares for males"], ans:1, fb:"In a pedigree chart, females are represented by circles and males by squares." },
+  { topic:"Pedigree Charts", q:"An individual in a pedigree chart shows the recessive phenotype. What can you conclude about their genotype?", opts:["They must be heterozygous (Aa)","They must be homozygous dominant (AA)","They must be homozygous recessive (aa)","Their genotype cannot be determined from a pedigree chart"], ans:2, fb:"An individual showing the recessive phenotype can only be homozygous recessive (aa) — they have two recessive alleles, with no dominant allele to mask them." },
+  { topic:"Pedigree Charts", q:"Two parents in a pedigree chart both show the dominant phenotype, yet one of their children shows the recessive phenotype. What can you deduce about the parents' genotypes?", opts:["Both parents must be homozygous dominant (AA)","Both parents must be homozygous recessive (aa)","Both parents must be heterozygous (Aa), as they each passed a recessive allele to the child","One parent must be homozygous dominant and the other homozygous recessive"], ans:2, fb:"For a child to show the recessive phenotype (aa), they must have received one recessive allele from each parent. Both parents must be heterozygous (Aa) — carriers of the recessive allele." },
+  { topic:"Pedigree Charts", q:"A pedigree chart shows a trait appearing in every generation of a family. This pattern most likely suggests the trait is caused by:", opts:["a recessive allele, as it skips generations","a dominant allele, as it is expressed whenever the allele is present","a homozygous recessive genotype that is inherited by all offspring","environmental factors rather than inheritance"], ans:1, fb:"A dominant allele is always expressed when present. A trait appearing in every generation suggests a dominant allele — only one copy is needed to show the phenotype." },
+  { topic:"Pedigree Charts", q:"In a pedigree chart, a trait appears in a child but neither parent shows the trait. This suggests the trait is most likely:", opts:["dominant, as it appeared in the offspring without being in the parents","recessive, as both parents are likely heterozygous carriers who passed on the recessive allele","dominant, as the parents must both be homozygous recessive","recessive, but only expressed when the dominant allele is also present"], ans:1, fb:"If neither parent shows a trait but a child does, the trait is likely recessive. Both parents are probably heterozygous carriers (Aa) who each passed the recessive allele to the child (aa)." },
+  // VARIATION
+  { topic:"Variation", q:"Hitchhiker's thumb, tongue curl, and widow's peak are traits used to measure variation. These traits are most useful for studying genetics because:", opts:["they are all influenced only by environmental factors","they each show two distinct forms that can be tracked across generations","they are only found in homozygous individuals","they cannot be inherited from parent to offspring"], ans:1, fb:"Traits like hitchhiker's thumb and widow's peak show clear, distinct alternative forms (present or absent), making them ideal for tracking patterns of inheritance across generations." },
+  { topic:"Variation", q:"When measuring variation in a group of plants of the same age, some variation (such as height) may be due to:", opts:["differences in genotype only, as environment has no effect on plants","the interaction of genotype with the environment, as both contribute to the phenotype","only environmental factors, as all plants of the same age have identical genotypes","the number of recessive alleles, as more recessive alleles always produce taller plants"], ans:1, fb:"Phenotype results from the interaction of genotype with the environment. Even plants with similar genotypes may vary in height due to factors such as light and nutrient availability." },
+  { topic:"Variation", q:"Height in humans is described as a polygenic trait. This means it is:", opts:["controlled by a single gene with clear dominant and recessive alleles","influenced by hundreds of different genes, each contributing a small effect","determined entirely by environmental factors such as nutrition","inherited only from the mother's side of the family"], ans:1, fb:"Height is polygenic — influenced by hundreds of genes each contributing a small effect. Environmental factors such as nutrition also contribute to the final phenotype." },
+  // GREGOR MENDEL
+  { topic:"Gregor Mendel", q:"Who is considered the founder of the science of genetics?", opts:["Charles Darwin, who developed the theory of natural selection","William Bateson, who introduced the word 'genetics' in 1905","Gregor Mendel, an Austrian monk whose experiments with pea plants revealed patterns of inheritance","James Watson, who discovered the double helix structure of DNA"], ans:2, fb:"Gregor Mendel was an Austrian monk and botanist whose pea plant experiments revealed that inheritance follows specific, predictable patterns. He is recognised as the founder of genetics." },
+  { topic:"Gregor Mendel", q:"Mendel's work with pea plants was significant because he discovered that:", opts:["inheritance is entirely random and cannot be predicted","traits are only passed from mothers to offspring","inheritance follows specific, predictable patterns with dominant and recessive traits","all offspring always show the same phenotype as their parents"], ans:2, fb:"Mendel discovered that inheritance follows predictable patterns — some traits are dominant (shown with one copy) and others are recessive (only shown with two copies). This laid the foundation for genetics." }
+];
+
+let questions = [], cur = 0, score = 0, results = [];
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+
+function buildQuiz(){
+  questions = shuffle([...allQuestions]).slice(0,10);
+  cur = 0; score = 0; results = [];
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('q-card').style.display = 'block';
+  buildDots();
+  showQuestion();
+}
+
+function buildDots(){
+  const row = document.getElementById('dot-row');
+  row.innerHTML = '';
+  questions.forEach((_,i)=>{
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' active':'');
+    d.id = `dot-${i}`;
+    d.textContent = i+1;
+    row.appendChild(d);
+  });
+}
+
+function showQuestion(){
+  const q = questions[cur];
+  document.getElementById('q-num').textContent = `Question ${cur+1} of ${questions.length}`;
+  document.getElementById('q-topic').textContent = q.topic;
+  document.getElementById('q-text').textContent = q.q;
+  const opts = document.getElementById('opts');
+  opts.innerHTML = '';
+  q.opts.forEach((o,j)=>{
+    const b = document.createElement('button');
+    b.className = 'option-btn';
+    b.textContent = o;
+    b.onclick = ()=>selectOption(j);
+    opts.appendChild(b);
+  });
+  const fb = document.getElementById('feedback-box');
+  fb.className = 'feedback';
+  fb.style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('q-card').className = '';
+}
+
+function selectOption(chosen){
+  const q = questions[cur];
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach(b=>b.disabled=true);
+  const isCorrect = chosen === q.ans;
+  const fb = document.getElementById('feedback-box');
+  const card = document.getElementById('q-card');
+  const dot = document.getElementById(`dot-${cur}`);
+  if(isCorrect){
+    score++;
+    btns[chosen].classList.add('correct-ans');
+    fb.className = 'correct';
+    fb.innerHTML = `<strong>✅ Correct!</strong> ${q.fb}`;
+    card.className = 'correct';
+    dot.className = 'dot correct';
+    results.push(true);
+  } else {
+    btns[chosen].classList.add('wrong-ans');
+    btns[q.ans].classList.add('correct-ans');
+    fb.className = 'incorrect';
+    fb.innerHTML = `<strong>❌ Not quite.</strong> The correct answer is: <em>${q.opts[q.ans]}</em>. ${q.fb}`;
+    card.className = 'incorrect';
+    dot.className = 'dot incorrect';
+    results.push(false);
+  }
+  document.getElementById('next-btn').style.display = 'block';
+  document.getElementById('next-btn').textContent = cur < questions.length-1 ? 'Next Question →' : 'See Results →';
+}
+
+function nextQuestion(){
+  cur++;
+  if(cur >= questions.length){ showResults(); return; }
+  document.getElementById(`dot-${cur}`).classList.add('active');
+  showQuestion();
+}
+
+function showResults(){
+  document.getElementById('q-card').style.display = 'none';
+  const res = document.getElementById('results');
+  res.style.display = 'block';
+  const pct = Math.round(score/questions.length*100);
+  document.getElementById('score-display').textContent = `${score} / ${questions.length}`;
+  document.getElementById('score-bar').style.width = pct+'%';
+  document.getElementById('results-msg').textContent =
+    pct>=80 ? '🌟 Excellent work! You have a strong understanding of genetics and inheritance.' :
+    pct>=60 ? '👍 Good effort! Review the topics marked incorrect and try again.' :
+    '📖 Keep studying! Re-read the definitions and try the quiz again to improve.';
+  const topicScores = {};
+  questions.forEach((q,i)=>{
+    if(!topicScores[q.topic]) topicScores[q.topic]={right:0,total:0};
+    topicScores[q.topic].total++;
+    if(results[i]) topicScores[q.topic].right++;
+  });
+  let html = '<h3>Performance by Topic</h3>';
+  for(const [t,s] of Object.entries(topicScores))
+    html += `<div class="topic-row"><span>${t}</span><span>${s.right}/${s.total}</span></div>`;
+  document.getElementById('topic-breakdown').innerHTML = html;
+  res.scrollIntoView({behavior:'smooth'});
+}
+
+function restartQuiz(){ buildQuiz(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+buildQuiz();
+</script>
+</body>
+</html>
