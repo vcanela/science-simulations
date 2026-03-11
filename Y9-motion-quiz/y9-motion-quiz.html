@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Year 9 Science – Speed, Graphs, Forces &amp; Hypotheses</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9;min-height:100vh;display:flex;justify-content:center;padding:20px}
+.wrap{max-width:600px;width:100%}
+.card{background:#fff;border-radius:16px;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:28px;min-height:380px;display:flex;flex-direction:column}
+.progress-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.progress-track{flex:1;height:6px;border-radius:3px;background:#e2e8f0;overflow:hidden}
+.progress-fill{height:100%;background:#2563eb;border-radius:3px;transition:width .3s}
+.progress-label{font-size:13px;color:#64748b;font-weight:500;white-space:nowrap}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:12px}
+.q-text{font-size:15px;color:#0f172a;margin-bottom:16px;line-height:1.5;font-weight:500}
+.opt-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:2px solid #e2e8f0;background:#f8fafc;cursor:pointer;font-size:14px;color:#0f172a;text-align:left;transition:all .15s;font-family:inherit;width:100%;margin-bottom:8px}
+.opt-btn:hover:not(.locked){border-color:#93c5fd;background:#eff6ff}
+.opt-btn.selected{border-color:#2563eb;background:#dbeafe;font-weight:600}
+.opt-btn.correct{border-color:#059669;background:#d1fae5}
+.opt-btn.wrong{border-color:#dc2626;background:#fee2e2}
+.opt-btn.locked{cursor:default}
+.opt-letter{width:22px;height:22px;border-radius:50%;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:#94a3b8;transition:all .15s}
+.opt-btn.selected .opt-letter{background:#2563eb;color:#fff;border-color:#2563eb}
+.opt-btn.correct .opt-letter{background:#059669;color:#fff;border-color:#059669}
+.opt-btn.wrong .opt-letter{background:#dc2626;color:#fff;border-color:#dc2626}
+.explain-box{margin-top:14px;padding:12px;border-radius:10px;background:#f0fdf4;border:1px solid #bbf7d0}
+.explain-box p{font-size:13px;color:#166534;line-height:1.5;white-space:pre-line}
+.nav{margin-top:auto;padding-top:20px;display:flex;justify-content:space-between;align-items:center}
+.btn{padding:8px 18px;border-radius:8px;font-weight:500;cursor:pointer;font-size:14px;font-family:inherit;transition:all .15s}
+.btn-outline{border:1px solid #e2e8f0;background:#fff;color:#334155}
+.btn-outline:hover{background:#f8fafc}
+.btn-outline:disabled{background:#f1f5f9;color:#94a3b8;cursor:default}
+.btn-primary{border:none;background:#2563eb;color:#fff;font-weight:600}
+.btn-primary:hover{background:#1d4ed8}
+.btn-primary:disabled{background:#94a3b8;cursor:default}
+.btn-green{border:none;background:#059669;color:#fff;font-weight:600}
+.btn-green:hover{background:#047857}
+.btn-submit{margin-top:14px;padding:10px 20px;border-radius:8px;border:none;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;font-size:14px;font-family:inherit}
+textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;font-size:14px;resize:vertical;font-family:inherit}
+.model-box{margin-top:16px;background:#f8fafc;border-radius:10px;padding:14px;border:1px solid #e2e8f0}
+.model-box h4{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:4px}
+.model-box p,.model-box ol{font-size:13px;color:#334155;line-height:1.6;margin-bottom:10px}
+.model-box ol{padding-left:20px}
+.model-box li{margin-bottom:4px}
+.self-btns{display:flex;gap:8px;margin-top:10px}
+.self-btn{flex:1;padding:8px 0;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;font-family:inherit}
+.self-good{border:2px solid #059669;background:#d1fae5;color:#065f46}
+.self-ok{border:2px solid #d97706;background:#fef3c7;color:#92400e}
+.self-poor{border:2px solid #dc2626;background:#fee2e2;color:#991b1b}
+.results-topic{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin-bottom:6px;border-radius:8px}
+.results-review{padding:10px 12px;margin-bottom:6px;border-radius:8px;border-left:4px solid}
+.results-review h4{font-size:13px;font-weight:600;color:#334155}
+.results-review p{font-size:12px;color:#475569;margin-top:2px;line-height:1.5;white-space:pre-line}
+.diff-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:380px}
+.diff-screen h1{font-size:22px;color:#0f172a;margin-bottom:4px}
+.diff-screen p.sub{font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.5}
+.diff-btn{width:100%;max-width:360px;padding:16px;border-radius:12px;border:2px solid #e2e8f0;background:#fff;cursor:pointer;margin-bottom:10px;text-align:left;transition:all .15s;font-family:inherit}
+.diff-btn:hover{border-color:#93c5fd;background:#eff6ff}
+.diff-btn h3{font-size:15px;color:#0f172a;margin-bottom:2px}
+.diff-btn span{font-size:12px;color:#64748b;line-height:1.4}
+.graph-svg{width:100%;max-width:360px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:14px}
+.scenario-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;line-height:1.6;font-size:14px;color:#334155}
+.scenario-box strong{color:#0f172a}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const rd=(n,d=1)=>Math.round(n*10**d)/10**d;
+const ri=(lo,hi)=>Math.round(lo+Math.random()*(hi-lo));
+
+// Ensure 4 unique option texts
+function uniqueOpts(correct,wrongFns){
+  const opts=[{text:correct,correct:true}];
+  const used=new Set([correct]);
+  for(const fn of wrongFns){
+    let v=fn();
+    let tries=0;
+    while(used.has(v)&&tries<20){v=fn();tries++;}
+    if(!used.has(v)){used.add(v);opts.push({text:v,correct:false});}
+  }
+  while(opts.length<4){
+    const junk=rd(parseFloat(correct)*(.5+Math.random()*1.5),2)+"";
+    if(!used.has(junk)){used.add(junk);opts.push({text:junk+" (units)",correct:false});}
+  }
+  return shuffle(opts);
+}
+
+const DIFF={
+  warmup:{label:"Building up",desc:"Smaller, friendlier numbers. A great place to start.",speedR:[2,10],distR:[10,80],tR:[2,10],convR:[10,50]},
+  confident:{label:"Feeling confident",desc:"Bigger numbers and trickier conversions.",speedR:[3,20],distR:[20,200],tR:[2,20],convR:[15,100]},
+  challenge:{label:"Challenge me",desc:"Harder numbers, multi-step thinking.",speedR:[3,30],distR:[50,500],tR:[3,40],convR:[20,150]}
+};
+
+let state={screen:"difficulty",diff:null,questions:[],idx:0,answers:{},submitted:{},showExplain:{},hypoInputs:{},selfScores:{}};
+
+const TC={
+  "Calculating speed":{bg:"#dbeafe",tx:"#1e40af"},
+  "Unit conversion":{bg:"#fef3c7",tx:"#92400e"},
+  "Rearranging s = d/t":{bg:"#d1fae5",tx:"#065f46"},
+  "Graph: stationary":{bg:"#ede9fe",tx:"#5b21b6"},
+  "Graph: constant speed":{bg:"#ede9fe",tx:"#5b21b6"},
+  "Graph: acceleration":{bg:"#ede9fe",tx:"#5b21b6"},
+  "Graph: journey":{bg:"#ede9fe",tx:"#5b21b6"},
+  "Speed from gradient":{bg:"#fce7f3",tx:"#9d174d"},
+  "Hypothesis & method":{bg:"#ffedd5",tx:"#9a3412"},
+  "Forces (explain)":{bg:"#e0f2fe",tx:"#075985"}
+};
+
+// ─── Graph SVG ───
+function graphSVG(pts,xMax,yMax,xL="Time (s)",yL="Distance (m)"){
+  const W=300,H=200,P=40;
+  const sx=x=>P+(x/xMax)*(W-P-10), sy=y=>H-P-(y/yMax)*(H-P-10);
+  let g='';
+  for(let i=1;i<=4;i++){
+    const fy=i/4,fx=i/4;
+    g+=`<line x1="${P}" y1="${sy(yMax*fy)}" x2="${W-5}" y2="${sy(yMax*fy)}" stroke="#e2e8f0" stroke-width="0.5"/>`;
+    g+=`<text x="${P-5}" y="${sy(yMax*fy)+4}" text-anchor="end" font-size="9" fill="#64748b">${Math.round(yMax*fy)}</text>`;
+    g+=`<text x="${sx(xMax*fx)}" y="${H-P+14}" text-anchor="middle" font-size="9" fill="#64748b">${Math.round(xMax*fx)}</text>`;
+  }
+  g+=`<text x="${P-5}" y="${sy(0)+4}" text-anchor="end" font-size="9" fill="#64748b">0</text>`;
+  const d=pts.map((pt,i)=>`${i===0?"M":"L"}${sx(pt[0])},${sy(pt[1])}`).join(" ");
+  const dots=pts.map(pt=>`<circle cx="${sx(pt[0])}" cy="${sy(pt[1])}" r="3" fill="#2563eb"/>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" class="graph-svg">
+    <line x1="${P}" y1="${H-P}" x2="${W-5}" y2="${H-P}" stroke="#64748b" stroke-width="1.5"/>
+    <line x1="${P}" y1="${H-P}" x2="${P}" y2="5" stroke="#64748b" stroke-width="1.5"/>
+    ${g}
+    <text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="10" fill="#334155">${xL}</text>
+    <text x="12" y="${H/2-20}" text-anchor="middle" font-size="10" fill="#334155" transform="rotate(-90,12,${H/2-20})">${yL}</text>
+    <path d="${d}" fill="none" stroke="#2563eb" stroke-width="2"/>${dots}</svg>`;
+}
+
+// ──────────── QUESTION GENERATORS ────────────
+
+function genSpeed(cfg){
+  const sc=pick([
+    {ctx:"A car travels",dU:"km",tU:"hours"},
+    {ctx:"A cyclist rides",dU:"m",tU:"seconds"},
+    {ctx:"A runner sprints",dU:"m",tU:"seconds"},
+    {ctx:"A bus travels",dU:"km",tU:"hours"},
+    {ctx:"A boat sails",dU:"m",tU:"seconds"},
+    {ctx:"A train covers",dU:"km",tU:"hours"}
+  ]);
+  const d=ri(cfg.distR[0],cfg.distR[1]);
+  const t=ri(Math.max(cfg.tR[0],2),cfg.tR[1]);
+  const spd=rd(d/t,2);
+  const sU=`${sc.dU} ${sc.tU==="hours"?"h":"s"}⁻¹`;
+  return {type:"mc",topic:"Calculating speed",
+    q:`${sc.ctx} ${d} ${sc.dU} in ${t} ${sc.tU}. What is its speed?`,
+    options:uniqueOpts(
+      `${spd} ${sU}`,
+      [()=>`${rd(d*t,2)} ${sU}`,()=>`${rd(d+t,2)} ${sU}`,()=>`${rd(t/d,2)} ${sU}`]
+    ),
+    explain:`Speed = distance ÷ time = ${d} ÷ ${t} = ${spd} ${sU}`};
+}
+
+function genConversion(cfg){
+  if(Math.random()<.5){
+    const kmh=ri(cfg.convR[0],cfg.convR[1]);
+    const ms=rd(kmh/3.6,2);
+    return {type:"mc",topic:"Unit conversion",q:`Convert ${kmh} km h⁻¹ into m s⁻¹.`,
+      options:uniqueOpts(
+        `${ms} m s⁻¹`,
+        [()=>`${rd(kmh*3.6,2)} m s⁻¹`,()=>`${rd(kmh/1000,2)} m s⁻¹`,()=>`${rd(kmh*1000/60,2)} m s⁻¹`]
+      ),
+      explain:`Divide by 3.6: ${kmh} ÷ 3.6 = ${ms} m s⁻¹\n(×1000 for metres, ÷3600 for seconds → same as ÷3.6)`};
+  } else {
+    const ms=rd(2+Math.random()*28,1);
+    const kmh=rd(ms*3.6,1);
+    return {type:"mc",topic:"Unit conversion",q:`Convert ${ms} m s⁻¹ into km h⁻¹.`,
+      options:uniqueOpts(
+        `${kmh} km h⁻¹`,
+        [()=>`${rd(ms/3.6,1)} km h⁻¹`,()=>`${rd(ms*1000,1)} km h⁻¹`,()=>`${rd(ms+3.6,1)} km h⁻¹`]
+      ),
+      explain:`Multiply by 3.6: ${ms} × 3.6 = ${kmh} km h⁻¹`};
+  }
+}
+
+function genRearrange(cfg){
+  if(Math.random()<.5){
+    const s=rd(cfg.speedR[0]+Math.random()*(cfg.speedR[1]-cfg.speedR[0]),1);
+    const t=ri(cfg.tR[0],cfg.tR[1]);
+    const d=rd(s*t,1);
+    return {type:"mc",topic:"Rearranging s = d/t",
+      q:`An object moves at ${s} m s⁻¹ for ${t} seconds. What distance does it cover?`,
+      options:uniqueOpts(`${d} m`,[()=>`${rd(s/t,2)} m`,()=>`${rd(s+t,1)} m`,()=>`${rd(t/s,2)} m`]),
+      explain:`d = s × t = ${s} × ${t} = ${d} m`};
+  } else {
+    const s=rd(cfg.speedR[0]+Math.random()*(cfg.speedR[1]-cfg.speedR[0]),1);
+    const d=ri(cfg.distR[0],cfg.distR[1]);
+    const t=rd(d/s,2);
+    return {type:"mc",topic:"Rearranging s = d/t",
+      q:`An object travels ${d} m at ${s} m s⁻¹. How long does it take?`,
+      options:uniqueOpts(`${t} s`,[()=>`${rd(d*s,1)} s`,()=>`${rd(d+s,1)} s`,()=>`${rd(s/d,3)} s`]),
+      explain:`t = d ÷ s = ${d} ÷ ${s} = ${t} s`};
+  }
+}
+
+function genGraphInterpret(){
+  const templates=[
+    ()=>{const d=ri(10,50),tM=ri(6,12);return{points:[[0,d],[tM,d]],xMax:tM+2,yMax:d+20,q:"What does this graph show?",
+      options:shuffle([{text:"The object is stationary (not moving)",correct:true},{text:"The object is moving at constant speed",correct:false},{text:"The object is accelerating",correct:false},{text:"The object is decelerating",correct:false}]),
+      explain:`The distance stays at ${d} m — the object isn't moving.`,topic:"Graph: stationary"};},
+    ()=>{const s=rd(2+Math.random()*8,1),tM=ri(5,10),dM=rd(s*tM,1);return{points:[[0,0],[tM,dM]],xMax:tM+2,yMax:Math.ceil(dM*1.2),q:"What does this graph show?",
+      options:shuffle([{text:"Constant speed",correct:true},{text:"Acceleration",correct:false},{text:"The object is stationary",correct:false},{text:"The object is returning to start",correct:false}]),
+      explain:`A straight line from the origin = constant speed (${s} m s⁻¹).`,topic:"Graph: constant speed"};},
+    ()=>{const tM=10,dM=ri(30,60);const pts=[];for(let i=0;i<=5;i++){const f=i/5;pts.push([f*tM,Math.round(f*f*dM)])}
+      return{points:pts,xMax:tM+2,yMax:Math.ceil(dM*1.2),q:"What does this curve show?",
+      options:shuffle([{text:"The object is accelerating (getting faster)",correct:true},{text:"The object is moving at constant speed",correct:false},{text:"The object is decelerating (getting slower)",correct:false},{text:"The object is stationary then starts moving",correct:false}]),
+      explain:"The curve gets steeper over time — the gradient increases, meaning the object speeds up.",topic:"Graph: acceleration"};},
+    ()=>{const s1=rd(2+Math.random()*4,1),s2=rd(.5+Math.random()*1.5,1);
+      const t1=4,t2=7,t3=12,d1=rd(s1*t1,1),d2=d1,d3=rd(d2+s2*(t3-t2),1);
+      return{points:[[0,0],[t1,d1],[t2,d2],[t3,d3]],xMax:14,yMax:Math.ceil(d3*1.3),q:"Describe this journey.",
+      options:shuffle([{text:"Constant speed, then stationary, then slower constant speed",correct:true},{text:"Accelerating, then stationary, then decelerating",correct:false},{text:"Constant speed throughout the journey",correct:false},{text:"Stationary, then constant speed, then stationary again",correct:false}]),
+      explain:`0–${t1}s: constant speed (${s1} m s⁻¹). ${t1}–${t2}s: stationary (flat). ${t2}–${t3}s: slower constant speed (${s2} m s⁻¹).`,topic:"Graph: journey"};}
+  ];
+  return{type:"graph-mc",...pick(templates)()};
+}
+
+function genGradient(){
+  const t1=pick([0,5]),t2=t1+pick([5,10]);
+  const d1=t1===0?0:pick([0,5,10,15,20]);
+  const spd=pick([1,2,3,4,5,6,8,10]);
+  const rise=spd*(t2-t1),d2=d1+rise;
+  const xMax=Math.ceil((t2+5)/5)*5,yMax=Math.ceil((d2+10)/10)*10;
+  return{type:"graph-mc",topic:"Speed from gradient",
+    points:d1===0?[[0,0],[t2,d2]]:[[0,0],[t1,d1],[t2,d2]],
+    xMax,yMax,
+    q:`What is the speed between ${t1} s and ${t2} s? (Calculate the gradient.)`,
+    options:uniqueOpts(`${spd} m s⁻¹`,[
+      ()=>`${rd((t2-t1)/rise,2)} m s⁻¹`,
+      ()=>`${rd(d2/(t2),1)} m s⁻¹`,
+      ()=>`${spd+pick([2,3,-2,-3])} m s⁻¹`
+    ]),
+    explain:`Gradient = rise ÷ run = (${d2} − ${d1}) ÷ (${t2} − ${t1}) = ${rise} ÷ ${t2-t1} = ${spd} m s⁻¹`};
+}
+
+// ─── Hypothesis ───
+const HYPO_QS=[
+  {aim:"To investigate how the height a ball is dropped from affects the height it bounces back to.",hint:"Think about what happens to the bounce height as you increase the drop height.",
+    model_hypo:"If the drop height increases, then the bounce height will also increase, because the ball has more gravitational potential energy which converts to more kinetic energy on impact.",
+    equipment:"Tennis ball, metre ruler, flat hard surface (e.g. concrete), phone camera (slow-motion), masking tape, retort stand (optional).",
+    safety:"Ensure the drop area is clear of trip hazards. Stand clear of the bounce zone. Use a flat, stable surface to avoid the ball rolling into others.",
+    method:["Tape a metre ruler vertically to a wall or retort stand on a flat, hard surface.","Hold the tennis ball so its base is at the first drop height (20 cm).","Release the ball (do not push it) and record the bounce height using a phone camera in slow motion.","Repeat the drop 3 times at this height and record each bounce height.","Repeat steps 2–4 for drop heights of 40 cm, 60 cm, 80 cm, and 100 cm.","Calculate the average bounce height for each drop height."]},
+  {aim:"To investigate how the mass on a toy car affects the distance it rolls after leaving a ramp.",hint:"Will more mass make it roll further, shorter, or stay the same?",
+    model_hypo:"If the mass on the car increases, then the distance it rolls will increase, because a heavier car has more momentum at the bottom of the ramp.",
+    equipment:"Toy car, ramp (e.g. wooden board), books to set ramp angle, slotted masses (50 g each), tape, tape measure, flat smooth surface.",
+    safety:"Secure the ramp so it cannot slip. Keep the rolling area clear. Place a barrier at the end of the run to stop the car.",
+    method:["Set up the ramp at a fixed angle (e.g. 30°) using books.","Mark a starting line at the top of the ramp with tape.","Place the toy car (no added mass) at the starting line and release it.","Measure the distance rolled on the flat surface from the ramp base using a tape measure.","Repeat 3 times and record each distance.","Add 50 g to the car and repeat steps 3–5.","Continue in 50 g intervals up to 200 g.","Calculate the average distance for each mass."]},
+  {aim:"To investigate how the angle of a ramp affects the speed of a marble at the bottom.",hint:"What happens to the marble's speed as the ramp gets steeper?",
+    model_hypo:"If the angle of the ramp increases, then the marble will be faster at the bottom, because a steeper ramp means a greater component of gravity acts along the slope.",
+    equipment:"Marble, adjustable ramp, protractor, stopwatch (or light gates), tape measure, flat surface.",
+    safety:"Keep fingers clear of the marble's path. Place a towel at the end to stop the marble. Ensure the ramp is stable.",
+    method:["Set up the ramp ending on a flat surface.","Use a protractor to set the angle to 10°.","Mark a 50 cm distance along the flat from the ramp base.","Release the marble from the top (same position each time).","Time how long it takes to travel the 50 cm.","Repeat 3 times and record.","Change the angle to 20° and repeat steps 4–6.","Continue for 30°, 40°, and 50°.","Calculate speed = distance ÷ time for each, then average per angle."]},
+  {aim:"To investigate how the length of a pendulum affects its period (time for one full swing).",hint:"Think about what happens when you make the string longer or shorter.",
+    model_hypo:"If the length of the pendulum increases, then the period will increase (it swings more slowly), because a longer pendulum has a greater arc to travel.",
+    equipment:"Retort stand with clamp and boss, string, 100 g mass (bob), metre ruler, protractor, stopwatch.",
+    safety:"Clamp the retort stand to the bench so it cannot topple. Keep clear of the swinging mass. Use a small angle (<20°).",
+    method:["Clamp the retort stand firmly to the bench.","Tie the mass to 20 cm of string and attach the other end to the clamp.","Pull the pendulum to 15° using a protractor as a guide.","Release and start the stopwatch.","Time 10 full swings, then divide by 10 to get the period.","Repeat 3 times.","Change to 40 cm and repeat steps 3–6.","Continue for 60 cm, 80 cm, and 100 cm.","Calculate the average period for each length."]},
+  {aim:"To investigate how the surface type affects the friction force on a wooden block.",hint:"Which surfaces do you think will have more friction?",
+    model_hypo:"If the surface is rougher, then the friction force will be greater, because rough surfaces have more contact points that resist the block's motion.",
+    equipment:"Wooden block, spring balance (newton meter, 0–10 N), surfaces: smooth tile, carpet, sandpaper (P80), wooden bench, cotton fabric.",
+    safety:"Pull the spring balance gently and steadily — do not let it snap back. Secure surfaces so they do not slide off the bench.",
+    method:["Place the wooden block on the first surface (smooth tile).","Attach the spring balance to the block using a hook or tape.","Pull the block at a slow, steady speed along the surface.","Read the force while the block moves at constant speed (this equals the friction force).","Record the reading. Repeat 3 times.","Move to the next surface (carpet) and repeat steps 3–5.","Continue for sandpaper, wooden bench, and fabric.","Calculate the average friction force for each surface."]}
+];
+function genHypo(){return{type:"hypothesis",topic:"Hypothesis & method",...pick(HYPO_QS)};}
+
+// ─── Forces explain questions ───
+const FORCES_WARMUP=[
+  {scenario:"A book is sitting still on a table.",
+    q:"Explain whether the forces on the book are balanced or unbalanced.",
+    model:"The forces on the book are balanced. Gravity pulls the book downward, and the table pushes back upward with an equal-sized support force (normal force). Because these two forces are equal in size and opposite in direction, the overall (net) force is zero, so the book stays still."},
+  {scenario:"A shopping trolley is being pushed along a smooth floor at a constant speed.",
+    q:"Explain what the forces on the trolley are doing.",
+    model:"The forces on the trolley are balanced. Even though it is moving, it moves at a constant speed in a straight line. The pushing force forward equals the friction force backward. When forces are balanced, an object keeps doing what it's already doing — in this case, moving at constant speed (Newton's first law)."},
+  {scenario:"A ball has been thrown into the air and is on its way up (ignore air resistance).",
+    q:"Are the forces on the ball balanced or unbalanced? Explain what happens to its motion.",
+    model:"The forces are unbalanced. The only force acting is gravity pulling the ball downward. Since there is an unbalanced force downward, the ball decelerates (slows down) on the way up. Eventually it stops momentarily at the top, then accelerates back down."},
+  {scenario:"Two students are playing tug-of-war. Neither side is moving.",
+    q:"Explain why neither side is moving using the idea of balanced forces.",
+    model:"Neither side moves because the forces are balanced. The pull from the left team is equal in size to the pull from the right team, but in opposite directions. The net force is zero, so according to Newton's first law, there is no change in motion — the rope stays still."},
+];
+const FORCES_CONFIDENT=[
+  {scenario:"A skydiver has jumped from a plane and is falling faster and faster.",
+    q:"Explain why the skydiver is accelerating using the idea of unbalanced forces.",
+    model:"The skydiver accelerates because the forces are unbalanced. Gravity pulls them downward with a large force (their weight). Air resistance pushes upward, but at the start it is small because they haven't built up much speed yet. Since the downward force is greater than the upward force, there is a net force downward, causing the skydiver to accelerate (Newton's second law: F = ma, so a net force causes acceleration)."},
+  {scenario:"A car is driving at a steady 50 km h⁻¹ along a flat road, then the driver presses the accelerator.",
+    q:"Explain what happens to the forces and the car's motion when the driver accelerates.",
+    model:"Before pressing the accelerator, the forces were balanced — the engine force forward equalled friction and air resistance backward, so speed was constant. When the driver presses the accelerator, the engine force increases while friction stays roughly the same. Now the forces are unbalanced — there is a net forward force. By Newton's second law (F = ma), this net force causes the car to accelerate (speed up)."},
+  {scenario:"A heavy box (20 kg) and a light box (5 kg) are pushed with the same force.",
+    q:"Explain why the lighter box accelerates faster. Use Newton's second law in your answer.",
+    model:"Newton's second law says F = ma, which can be rearranged to a = F ÷ m. If the same force is applied to both boxes, the lighter box (5 kg) has a smaller mass to divide by, so it gets a larger acceleration. The heavier box (20 kg) has more mass resisting the force, so its acceleration is smaller. More mass means more resistance to changes in motion (inertia)."},
+];
+const FORCES_CHALLENGE=[
+  {scenario:"A rocket of mass 500 kg has engines producing 8000 N of thrust. Its weight is 5000 N.",
+    q:"Calculate the net force and acceleration of the rocket. Explain your reasoning using Newton's second law.",
+    model:"Net force = thrust − weight = 8000 − 5000 = 3000 N upward. The forces are unbalanced, so the rocket accelerates. Using Newton's second law: a = F ÷ m = 3000 ÷ 500 = 6 m s⁻². The rocket accelerates upward at 6 m s⁻² because the upward force is greater than the downward force, giving a net upward force."},
+  {scenario:"A cyclist (total mass 80 kg) pedals with a driving force of 200 N. Friction and air resistance total 120 N.",
+    q:"Calculate the cyclist's acceleration and explain what would happen if they stopped pedalling.",
+    model:"Net force = 200 − 120 = 80 N forward (unbalanced). Using a = F ÷ m = 80 ÷ 80 = 1 m s⁻². The cyclist accelerates at 1 m s⁻². If they stopped pedalling, the driving force drops to 0 N, but friction (120 N) still acts backward. Now the net force is 120 N backward — the forces are unbalanced in the opposite direction, so the cyclist decelerates (slows down) until they stop."},
+  {scenario:"Two ice skaters push off each other. Skater A (mass 60 kg) and Skater B (mass 40 kg) push apart with the same force.",
+    q:"Explain why Skater B moves away faster than Skater A.",
+    model:"When they push off, the force on A from B is equal and opposite to the force on B from A (Newton's third law). Since the same size force acts on both, we use a = F ÷ m. Skater B has less mass (40 kg), so the same force produces a larger acceleration. Skater A has more mass (60 kg), so the same force produces a smaller acceleration. This is why B moves away faster."},
+];
+
+function genForces(diffKey){
+  let pool;
+  if(diffKey==="warmup") pool=FORCES_WARMUP;
+  else if(diffKey==="confident") pool=[...FORCES_WARMUP,...FORCES_CONFIDENT];
+  else pool=[...FORCES_CONFIDENT,...FORCES_CHALLENGE];
+  const f=pick(pool);
+  return {type:"explain",topic:"Forces (explain)",scenario:f.scenario,q:f.q,model:f.model};
+}
+
+// ─── Build set (always 12) ───
+function buildSet(dk){
+  const cfg=DIFF[dk];
+  const qs=[];
+  // 2 speed, 2 conversion, 2 rearrange, 2 graph interp, 1 gradient, 1 hypothesis, 2 forces explain = 12
+  for(let i=0;i<2;i++) qs.push(genSpeed(cfg));
+  for(let i=0;i<2;i++) qs.push(genConversion(cfg));
+  for(let i=0;i<2;i++) qs.push(genRearrange(cfg));
+  for(let i=0;i<2;i++) qs.push(genGraphInterpret());
+  qs.push(genGradient());
+  qs.push(genHypo());
+  // 2 forces (pick 2 different ones)
+  const f1=genForces(dk);
+  let f2=genForces(dk);
+  let tries=0;while(f2.scenario===f1.scenario&&tries<15){f2=genForces(dk);tries++;}
+  qs.push(f1);qs.push(f2);
+  return shuffle(qs);
+}
+
+// ─── Render helpers ───
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function render(){
+  const app=document.getElementById("app");
+  if(state.screen==="difficulty") return renderDiff(app);
+  if(state.screen==="results") return renderResults(app);
+  renderQ(app);
+}
+
+function renderDiff(el){
+  el.innerHTML=`<div class="card diff-screen">
+    <h1>Year 9 Science Test</h1>
+    <p class="sub">Speed, distance–time graphs, forces &amp; hypotheses.<br>Choose your level to begin.</p>
+    ${Object.entries(DIFF).map(([k,v])=>`<button class="diff-btn" data-d="${k}"><h3>${v.label}</h3><span>${v.desc}</span></button>`).join("")}
+  </div>`;
+  el.querySelectorAll(".diff-btn").forEach(b=>b.onclick=()=>{
+    state={screen:"quiz",diff:b.dataset.d,questions:buildSet(b.dataset.d),idx:0,answers:{},submitted:{},showExplain:{},hypoInputs:{},selfScores:{}};
+    render();
+  });
+}
+
+function renderQ(el){
+  const q=state.questions[state.idx], total=state.questions.length;
+  const tc=TC[q.topic]||{bg:"#f1f5f9",tx:"#334155"};
+  const isSub=state.submitted[state.idx];
+  let body="";
+
+  if(q.type==="hypothesis"){
+    const hv=state.hypoInputs[state.idx]||{};
+    body=`<p style="font-size:15px;font-weight:600;color:#0f172a;margin-bottom:4px">Aim:</p>
+      <p style="font-size:15px;color:#334155;margin-bottom:6px;font-style:italic;line-height:1.5">${esc(q.aim)}</p>
+      <p style="font-size:12px;color:#64748b;margin-bottom:14px">${esc(q.hint)}</p>
+      <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin-bottom:4px">Write a hypothesis:</label>
+      <textarea id="hypo-input" rows="3" placeholder="If... then... because..." ${isSub?"disabled":""}>${esc(hv.hypo||"")}</textarea>
+      <label style="font-size:13px;font-weight:600;color:#334155;display:block;margin:12px 0 4px">Propose a method:</label>
+      <textarea id="method-input" rows="4" placeholder="Describe the steps..." ${isSub?"disabled":""}>${esc(hv.method||"")}</textarea>`;
+    if(!isSub) body+=`<button class="btn-submit" id="show-model">Show Model Answer</button>`;
+    if(isSub){
+      body+=`<div class="model-box"><h4>Model hypothesis:</h4><p>${esc(q.model_hypo)}</p>
+        <h4>Equipment:</h4><p>${esc(q.equipment)}</p>
+        <h4>Safety:</h4><p>${esc(q.safety)}</p>
+        <h4>Method:</h4><ol>${q.method.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>`;
+      body+=selfAssessHTML(state.idx)+"</div>";
+    }
+  } else if(q.type==="explain"){
+    const hv=state.hypoInputs[state.idx]||{};
+    body=`<div class="scenario-box"><strong>Scenario:</strong> ${esc(q.scenario)}</div>
+      <p class="q-text">${esc(q.q)}</p>
+      <textarea id="explain-input" rows="5" placeholder="Write your explanation here..." ${isSub?"disabled":""}>${esc(hv.answer||"")}</textarea>`;
+    if(!isSub) body+=`<button class="btn-submit" id="show-model">Show Model Answer</button>`;
+    if(isSub){
+      body+=`<div class="model-box"><h4>Model answer:</h4><p>${esc(q.model)}</p>`;
+      body+=selfAssessHTML(state.idx)+"</div>";
+    }
+  } else {
+    if(q.type==="graph-mc") body+=graphSVG(q.points,q.xMax,q.yMax);
+    body+=`<p class="q-text">${esc(q.q)}</p><div>`;
+    q.options.forEach((opt,oi)=>{
+      let cls="opt-btn";
+      if(state.answers[state.idx]===oi) cls+=" selected";
+      if(isSub){cls+=" locked";if(opt.correct) cls+=" correct";else if(state.answers[state.idx]===oi) cls+=" wrong";}
+      body+=`<button class="${cls}" data-oi="${oi}"><span class="opt-letter">${String.fromCharCode(65+oi)}</span>${esc(opt.text)}</button>`;
+    });
+    body+=`</div>`;
+    if(!isSub&&state.answers[state.idx]!==undefined) body+=`<button class="btn-submit" id="submit-mc">Submit Answer</button>`;
+    if(state.showExplain[state.idx]) body+=`<div class="explain-box"><p>${esc(q.explain)}</p></div>`;
+  }
+
+  el.innerHTML=`<div class="progress-bar"><div class="progress-track"><div class="progress-fill" style="width:${((state.idx+1)/total)*100}%"></div></div><span class="progress-label">${state.idx+1} / ${total}</span></div>
+    <div class="card"><span class="tag" style="background:${tc.bg};color:${tc.tx}">${esc(q.topic)}</span>${body}
+    <div class="nav">
+      <button class="btn btn-outline" id="prev" ${state.idx===0?"disabled":""}>← Back</button>
+      ${state.idx===total-1?`<button class="btn btn-green" id="finish">Finish &amp; See Results</button>`:`<button class="btn btn-outline" id="next">Next →</button>`}
+    </div></div>`;
+
+  // Events
+  el.querySelectorAll(".opt-btn:not(.locked)").forEach(b=>b.onclick=()=>{state.answers[state.idx]=parseInt(b.dataset.oi);render();});
+  const smc=el.querySelector("#submit-mc");if(smc) smc.onclick=()=>{state.submitted[state.idx]=true;state.showExplain[state.idx]=true;render();};
+  const sm=el.querySelector("#show-model");
+  if(sm) sm.onclick=()=>{
+    const hi=el.querySelector("#hypo-input"),mi=el.querySelector("#method-input"),ei=el.querySelector("#explain-input");
+    state.hypoInputs[state.idx]={hypo:hi?hi.value:"",method:mi?mi.value:"",answer:ei?ei.value:""};
+    state.submitted[state.idx]=true;render();
+  };
+  el.querySelectorAll(".self-btn").forEach(b=>b.onclick=()=>{state.selfScores[state.idx]=b.dataset.score;state.showExplain[state.idx]=true;render();});
+  // Save textareas
+  ["hypo-input","method-input","explain-input"].forEach(id=>{
+    const ta=el.querySelector("#"+id);
+    if(ta) ta.oninput=()=>{
+      const k=id==="explain-input"?"answer":id.replace("-input","");
+      state.hypoInputs[state.idx]={...(state.hypoInputs[state.idx]||{}),[k]:ta.value};
+    };
+  });
+  const prev=el.querySelector("#prev");if(prev) prev.onclick=()=>{state.idx=Math.max(0,state.idx-1);render();};
+  const next=el.querySelector("#next");if(next) next.onclick=()=>{state.idx++;render();};
+  const fin=el.querySelector("#finish");if(fin) fin.onclick=()=>{state.screen="results";render();};
+}
+
+function selfAssessHTML(idx){
+  if(state.selfScores[idx]!==undefined) return `<p style="font-size:13px;color:#059669;font-weight:600;margin-top:10px">Self-assessment recorded. Use the arrows to continue.</p>`;
+  return `<p style="font-size:13px;font-weight:600;color:#475569;margin:10px 0 8px">How did you go? Compare your answer to the model.</p>
+    <div class="self-btns">
+      <button class="self-btn self-good" data-score="good">Pretty close!</button>
+      <button class="self-btn self-ok" data-score="ok">Partially</button>
+      <button class="self-btn self-poor" data-score="poor">Needs work</button>
+    </div>`;
+}
+
+function renderResults(el){
+  const qs=state.questions,total=qs.length;
+  const topicBD={};let overall=0;
+  qs.forEach((q,i)=>{
+    const t=q.topic;if(!topicBD[t]) topicBD[t]={c:0,t:0};topicBD[t].t++;
+    let ok=false;
+    if(q.type==="hypothesis"||q.type==="explain"){if(state.selfScores[i]==="good") ok=true;}
+    else if(state.answers[i]!==undefined&&q.options[state.answers[i]]?.correct) ok=true;
+    if(ok){topicBD[t].c++;overall++;}
+  });
+  const pct=Math.round(overall/total*100);
+  let emoji="🔴",msg="Keep practising — you'll get there! Focus on the topics you found tricky.";
+  if(pct>=80){emoji="🟢";msg="Excellent work! You've nailed most of this.";}
+  else if(pct>=50){emoji="🟡";msg="Good effort — review the topics below to sharpen up.";}
+  const col=pct>=80?"#059669":pct>=50?"#d97706":"#dc2626";
+
+  let topics=Object.entries(topicBD).map(([t,v])=>{const c=TC[t]||{bg:"#f1f5f9",tx:"#334155"};
+    return `<div class="results-topic" style="background:${c.bg}"><span style="color:${c.tx};font-size:14px;font-weight:500">${esc(t)}</span><span style="color:${c.tx};font-weight:700;font-size:14px">${v.c}/${v.t}</span></div>`;}).join("");
+
+  let reviews=qs.map((q,i)=>{
+    let ok=(q.type==="hypothesis"||q.type==="explain")?state.selfScores[i]==="good":state.answers[i]!==undefined&&q.options[state.answers[i]]?.correct;
+    const expl=q.explain||q.model||"";
+    return `<div class="results-review" style="background:${ok?"#d1fae5":"#fee2e2"};border-left-color:${ok?"#059669":"#dc2626"}"><h4>Q${i+1}: ${esc(q.topic)}</h4><p>${esc(expl)}</p></div>`;}).join("");
+
+  el.innerHTML=`<div class="card">
+    <h2 style="font-size:22px;margin-bottom:4px">Results ${emoji}</h2>
+    <p style="font-size:32px;font-weight:700;margin:8px 0;color:${col}">${overall} / ${total} (${pct}%)</p>
+    <p style="color:#475569;margin-bottom:20px;line-height:1.5">${msg}</p>
+    <h3 style="font-size:14px;text-transform:uppercase;color:#94a3b8;letter-spacing:1px;margin-bottom:10px">By topic</h3>${topics}
+    <h3 style="font-size:14px;text-transform:uppercase;color:#94a3b8;letter-spacing:1px;margin:20px 0 10px">Review your answers</h3>${reviews}
+    <button class="btn btn-primary" style="margin-top:20px;width:100%;padding:12px 0;font-size:16px;border-radius:10px" id="restart">Try Again (New Questions)</button>
+  </div>`;
+  el.querySelector("#restart").onclick=()=>{state={screen:"difficulty",diff:null,questions:[],idx:0,answers:{},submitted:{},showExplain:{},hypoInputs:{},selfScores:{}};render();};
+}
+
+render();
+</script>
+</body>
+</html>
