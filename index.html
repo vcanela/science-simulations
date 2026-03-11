@@ -14,7 +14,6 @@
             min-height: 100vh;
         }
 
-        /* Subtle star-field background */
         body::before {
             content: '';
             position: fixed;
@@ -46,24 +45,9 @@
             padding: 60px 24px 40px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-
-        header h1 {
-            font-size: 2em;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-
-        header p {
-            font-size: 1em;
-            color: #8899bb;
-            line-height: 1.5;
-        }
+        header { text-align: center; margin-bottom: 48px; }
+        header h1 { font-size: 2em; font-weight: 700; color: #fff; margin-bottom: 8px; letter-spacing: -0.5px; }
+        header p { font-size: 1em; color: #8899bb; line-height: 1.5; }
 
         .sim-list {
             list-style: none;
@@ -76,39 +60,36 @@
             display: block;
             text-decoration: none;
             color: inherit;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-left: 3px solid var(--accent);
             border-radius: 14px;
-            padding: 24px 28px;
+            padding: 24px 52px 24px 28px;
             transition: all 0.25s ease;
             position: relative;
             overflow: hidden;
         }
 
         .sim-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
+            background: color-mix(in srgb, var(--accent) 6%, transparent);
+            border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+            border-left-color: var(--accent);
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
 
-        .sim-card .icon {
-            font-size: 1.8em;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .sim-card .title {
-            font-size: 1.15em;
+        .sim-card .icon { font-size: 1.8em; margin-bottom: 10px; display: block; }
+        .sim-card .title { font-size: 1.15em; font-weight: 600; color: #fff; margin-bottom: 6px; }
+        .sim-card .desc { font-size: 0.88em; color: #8899bb; line-height: 1.5; }
+        .sim-card .badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75em;
             font-weight: 600;
-            color: #ffffff;
-            margin-bottom: 6px;
-        }
-
-        .sim-card .desc {
-            font-size: 0.88em;
-            color: #8899bb;
-            line-height: 1.5;
+            background: color-mix(in srgb, var(--accent) 15%, transparent);
+            color: var(--accent);
         }
 
         .sim-card .arrow {
@@ -117,27 +98,40 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 1.2em;
-            color: rgba(255, 255, 255, 0.15);
+            color: rgba(255,255,255,0.15);
             transition: all 0.25s ease;
         }
-
         .sim-card:hover .arrow {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255,255,255,0.5);
             right: 20px;
         }
 
-        /* Colour accents per card */
-        .sim-card.plants { border-left: 3px solid #3cb44b; }
-        .sim-card.plants:hover { background: rgba(60, 180, 75, 0.06); border-color: rgba(60, 180, 75, 0.2); border-left-color: #3cb44b; }
-
-        .sim-card.eclipse { border-left: 3px solid #dd6644; }
-        .sim-card.eclipse:hover { background: rgba(220, 100, 65, 0.06); border-color: rgba(220, 100, 65, 0.2); border-left-color: #dd6644; }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        .filter-btn {
+            padding: 5px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: #8899bb;
+            font-size: 0.82em;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { background: rgba(255,255,255,0.08); color: #ccc; }
+        .filter-btn.active { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.25); }
 
         footer {
             text-align: center;
             margin-top: 60px;
             padding-top: 24px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: 1px solid rgba(255,255,255,0.06);
             color: #556680;
             font-size: 0.82em;
         }
@@ -145,7 +139,7 @@
         @media (max-width: 480px) {
             .container { padding: 40px 16px 30px; }
             header h1 { font-size: 1.6em; }
-            .sim-card { padding: 20px 22px; }
+            .sim-card { padding: 20px 48px 20px 22px; }
         }
     </style>
 </head>
@@ -155,38 +149,97 @@
             <h1>Interactive Simulations</h1>
             <p>Explore science concepts through hands-on browser simulations</p>
         </header>
-
-        <ul class="sim-list">
-            <li>
-                <a href="growing-plants/" class="sim-card plants">
-                    <span class="icon">🌱</span>
-                    <div class="title">Growing Plants</div>
-                    <div class="desc">Investigate how the amount of water affects plant growth over time. Run trials, record results, and calculate averages.</div>
-                    <span class="arrow">→</span>
-                </a>
-            </li>
-            <li>
-                <a href="lunar-eclipse/" class="sim-card eclipse">
-                    <span class="icon">🌑</span>
-                    <div class="title">Lunar Eclipse</div>
-                    <div class="desc">Explore the March 2026 total lunar eclipse — see true-scale sizes and distances, shadow geometry, and why the Moon turns red.</div>
-                    <span class="arrow">→</span>
-                </a>
-            </li>
-            <li>
-                <a href="genetics-quiz/" class="sim-card genetics">
-                    <span class="icon">🧬</span>
-                    <div class="title">Genetics quiz</div>
-                    <div class="desc">Work on your understanding of Monodybrid inheritance, dominance, pedigrees.</div>
-                    <span class="arrow">→</span>
-                </a>
-            </li>
-            <!-- Add more <li> entries for additional sims -->
-        </ul>
-
-        <footer>
-            Science simulations for the classroom
-        </footer>
+        <div class="filter-bar" id="filters"></div>
+        <ul class="sim-list" id="sim-list"></ul>
+        <footer>Science simulations for the classroom</footer>
     </div>
+
+<script>
+// ============================================================
+//  ADD NEW SIMULATIONS HERE — just append an object to this array.
+//  Everything else is automatic.
+// ============================================================
+const SIMS = [
+    {
+        title: "Growing Plants",
+        desc: "Investigate how the amount of water affects plant growth over time. Run trials, record results, and calculate averages.",
+        icon: "🌱",
+        href: "growing-plants/",
+        accent: "#3cb44b",      // accent colour for the card
+        tags: ["Biology"],       // used for filter buttons (auto-generated)
+    },
+    {
+        title: "Lunar Eclipse",
+        desc: "Explore the March 2026 total lunar eclipse — see true-scale sizes and distances, shadow geometry, and why the Moon turns red.",
+        icon: "🌑",
+        href: "lunar-eclipse/",
+        accent: "#dd6644",
+        tags: ["Physics", "Astronomy"],
+    },
+    {
+        title: "Genetics Quiz",
+        desc: "Work on your understanding of monohybrid inheritance, dominance, and pedigrees.",
+        icon: "🧬",
+        href: "genetics-quiz/",
+        accent: "#9b59b6",
+        tags: ["Biology"],
+    },
+    {
+        title: "Speed, Graphs & Forces Test",
+        desc: "Practice calculating speed, reading distance–time graphs, explaining forces, and writing hypotheses. Multiple difficulty levels.",
+        icon: "🏎️",
+        href: "speed-test/",
+        accent: "#2563eb",
+        tags: ["Physics"],
+        badge: "New",           // optional — shows a small label
+    },
+    // ── To add a new simulation, copy the block below: ──
+    // {
+    //     title: "Simulation Name",
+    //     desc: "Short description of what students will do.",
+    //     icon: "🔬",
+    //     href: "folder-name/",
+    //     accent: "#e67e22",
+    //     tags: ["Science"],
+    //     badge: "",             // optional, e.g. "New" or "Beta"
+    // },
+];
+
+// ─── Render ───
+const listEl = document.getElementById("sim-list");
+const filterEl = document.getElementById("filters");
+
+// Build tag set
+const allTags = [...new Set(SIMS.flatMap(s => s.tags || []))].sort();
+
+let activeTag = null;
+
+function renderFilters() {
+    if (allTags.length < 2) { filterEl.style.display = "none"; return; }
+    filterEl.innerHTML = `<button class="filter-btn ${activeTag === null ? "active" : ""}" data-tag="">All</button>`
+        + allTags.map(t => `<button class="filter-btn ${activeTag === t ? "active" : ""}" data-tag="${t}">${t}</button>`).join("");
+    filterEl.querySelectorAll(".filter-btn").forEach(btn => {
+        btn.onclick = () => { activeTag = btn.dataset.tag || null; renderFilters(); renderList(); };
+    });
+}
+
+function renderList() {
+    const filtered = activeTag ? SIMS.filter(s => (s.tags || []).includes(activeTag)) : SIMS;
+    listEl.innerHTML = filtered.map(s => `
+        <li>
+            <a href="${s.href}" class="sim-card" style="--accent:${s.accent || '#5588cc'}">
+                <span class="icon">${s.icon || "🔬"}</span>
+                <div class="title">${s.title}</div>
+                <div class="desc">${s.desc}</div>
+                ${s.badge ? `<span class="badge">${s.badge}</span>` : ""}
+                <span class="arrow">→</span>
+            </a>
+        </li>
+    `).join("");
+}
+
+renderFilters();
+renderList();
+</script>
 </body>
 </html>
