@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Force on a Current-Carrying Wire</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0f172a;--panel:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--bright:#f1f5f9;--wire:#fbbf24;--current:#f59e0b;--bfield:#60a5fa;--force:#f43f5e;--correct:#34d399;--incorrect:#f87171;--accent:#3b82f6;--accentBg:#1e3a5f}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);padding:20px 10px;min-height:100vh}
+  .container{max-width:600px;margin:0 auto}
+  h2{font-size:20px;font-weight:700;color:var(--bright);margin-bottom:4px}
+  .subtitle{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+  .subtitle strong,.subtitle em{color:var(--text)}
+  .tabs{display:flex;gap:8px;margin-bottom:16px}
+  .tab{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--muted);cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+  .tab.active{border-color:var(--accent);background:var(--accentBg);color:#93c5fd;font-weight:700}
+  .tab:hover{border-color:#475569}
+  .view-toggle{display:flex;gap:6px;margin-bottom:10px}
+  .vt-btn{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--panel);color:var(--muted);cursor:pointer;font-size:12px;font-weight:500;transition:all .15s}
+  .vt-btn.active{border-color:#8b5cf6;background:#2e1065;color:#c4b5fd;font-weight:700}
+  .controls{background:var(--panel);border-radius:12px;padding:16px;margin-top:12px;border:1px solid var(--border)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .label{font-size:12px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px}
+  .btn-group{display:flex;flex-wrap:wrap;gap:4px}
+  .dir-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--muted);cursor:pointer;font-size:13px;font-weight:500;transition:all .15s}
+  .dir-btn.active{border-color:var(--accent);background:var(--accentBg);color:#93c5fd;font-weight:700}
+  .dir-btn:hover{border-color:#475569}
+  .slider-wrap{margin-top:16px}
+  .slider-wrap input[type=range]{width:100%;margin-top:6px;accent-color:var(--accent)}
+  .readout{margin-top:14px;padding:12px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.7}
+  .readout .m{color:var(--muted)}
+  .quiz-info{font-size:14px;margin-bottom:6px}
+  .quiz-prompt{font-size:14px;font-weight:600;margin-bottom:10px}
+  .quiz-opts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .opt-btn{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;font-size:13px;font-weight:500;min-width:110;text-align:center;transition:all .15s}
+  .opt-btn.selected{border-color:var(--accent);background:var(--accentBg);color:#93c5fd;font-weight:700}
+  .opt-btn.correct{border-color:var(--correct);background:#064e3b;color:var(--correct);font-weight:700}
+  .opt-btn.wrong{border-color:var(--incorrect);background:#7f1d1d;color:var(--incorrect);font-weight:700}
+  .opt-btn.locked{cursor:default}
+  .check-btn{padding:8px 24px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:700;font-size:14px;cursor:pointer}
+  .check-btn:disabled{background:#334155;color:#64748b;cursor:default}
+  .result-text{font-size:15px;font-weight:700;margin-bottom:6px}
+  .result-text.correct{color:var(--correct)}
+  .result-text.wrong{color:var(--incorrect)}
+  .hint-text{font-size:12px;color:var(--muted);margin:0 0 8px;line-height:1.5}
+  .next-row{display:flex;gap:10px;align-items:center;margin-top:8px}
+  .score{font-size:13px;color:var(--muted)}
+  .score strong{color:var(--correct)}
+  .pedagogy{margin-top:16px;padding:14px;background:#1a2332;border-radius:10px;border:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.6}
+  .pedagogy strong{color:var(--bright)}
+  .c-current{color:var(--current)}
+  .c-bfield{color:var(--bfield)}
+  .c-force{color:var(--force)}
+  .reset-btn{font-size:11px;padding:3px 8px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--muted);cursor:pointer;margin-top:4px}
+  svg{display:block;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Force on a Current-Carrying Wire</h2>
+  <p class="subtitle"><strong>F</strong> = <em>BIL</em> sin θ &nbsp;|&nbsp; Direction: right-hand rule (<strong>F</strong> = <em>I</em><strong>L</strong> × <strong>B</strong>)</p>
+  <div class="tabs">
+    <button class="tab active" id="tabExplore" onclick="switchMode('explore')">Explore</button>
+    <button class="tab" id="tabQuiz" onclick="switchMode('quiz')">Quiz Me</button>
+  </div>
+  <div class="view-toggle">
+    <button class="vt-btn active" id="vt3d" onclick="setView('3d')">3D Perspective</button>
+    <button class="vt-btn" id="vt2d" onclick="setView('2d')">2D Convention (⊙ / ⊗)</button>
+  </div>
+  <div id="svgContainer"></div>
+  <div id="controlsContainer"></div>
+  <div class="pedagogy">
+    <strong>How to use the right-hand rule:</strong> Using your right hand, point your thumb in the direction of the conventional current (<span class="c-current">I</span>), and your fingers in the direction of the magnetic field (<span class="c-bfield">B</span>). Your palm then pushes in the direction of the force (<span class="c-force">F</span>). The magnitude depends on the angle: F = BIL sin θ — maximum at 90°, zero when parallel.
+    <br><br><strong>2D convention:</strong> <span style="font-size:14px">⊙</span> = vector coming out of the page (+z) &nbsp; <span style="font-size:14px">⊗</span> = vector going into the page (−z).
+    <br><strong>Coordinate system:</strong> Right-handed — x̂ × ŷ = ẑ.
+  </div>
+</div>
+
+<script>
+// ============================================================
+// RIGHT-HANDED COORDINATE SYSTEM
+// +x = right, +y = up, +z = out of page/screen
+// x cross y = z  (verified)
+// Force: F = IL x B  (thumb=I, fingers=B, palm=F)
+// ============================================================
+
+const DEG=Math.PI/180;
+const v3=(x,y,z)=>({x,y,z});
+const v3add=(a,b)=>v3(a.x+b.x,a.y+b.y,a.z+b.z);
+const v3scale=(a,s)=>v3(a.x*s,a.y*s,a.z*s);
+const v3cross=(a,b)=>v3(a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x);
+const v3dot=(a,b)=>a.x*b.x+a.y*b.y+a.z*b.z;
+const v3len=(a)=>Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+const v3norm=(a)=>{const l=v3len(a);return l>0?v3scale(a,1/l):v3(0,0,0)};
+
+// Compute force: F = I x B
+function forceVec(iVec,bVec){ return v3cross(iVec,bVec); }
+
+// 3D projection — right-handed: +x right, +y up, +z toward viewer
+// We rotate so that all three axes are visible in an oblique view
+function project(p,cx,cy,sc){
+  // Rotate around y-axis by -30 deg (turn x-z plane)
+  const ay=-30*DEG;
+  const cA=Math.cos(ay),sA=Math.sin(ay);
+  const x1=p.x*cA+p.z*sA;
+  const z1=-p.x*sA+p.z*cA;
+  const y1=p.y;
+  // Then tilt around x-axis by 20 deg (look slightly down)
+  const ax=20*DEG;
+  const cB=Math.cos(ax),sB=Math.sin(ax);
+  const y2=y1*cB-z1*sB;
+  const z2=y1*sB+z1*cB;
+  return{x:cx+x1*sc, y:cy-y2*sc};
+}
+
+// Verify: project(+x) should appear to the right, project(+y) up, project(+z) toward viewer (up-right-ish)
+// x cross y = z in the math — the projection just needs to look sensible.
+
+const DIRS={"+x":v3(1,0,0),"-x":v3(-1,0,0),"+y":v3(0,1,0),"-y":v3(0,-1,0),"+z":v3(0,0,1),"-z":v3(0,0,-1)};
+const DIR_LABELS={"+x":"+x (right)","-x":"−x (left)","+y":"+y (up)","-y":"−y (down)","+z":"+z (out of page)","-z":"−z (into page)"};
+const FORCE_LABELS={"+x":"+x (right)","-x":"−x (left)","+y":"+y (up)","-y":"−y (down)","+z":"+z (out)","-z":"−z (in)","zero":"Zero (no force)"};
+const FORCE_KEYS=["+x","-x","+y","-y","+z","-z","zero"];
+
+function vecToKey(v){
+  const t=0.5;
+  if(Math.abs(v.x)<t&&Math.abs(v.y)<t&&Math.abs(v.z)<t)return"zero";
+  if(v.x>t)return"+x";if(v.x<-t)return"-x";
+  if(v.y>t)return"+y";if(v.y<-t)return"-y";
+  if(v.z>t)return"+z";if(v.z<-t)return"-z";
+  return"zero";
+}
+
+const W=520,H=380,CX=W/2,CY=H/2+10,SC=120;
+
+let mode="explore",viewMode="3d";
+let currentDir="+x",bFieldDir="+z";
+let useCustomAngle=false,customTheta=90;
+let quizQ=null,quizGuess=null,quizResult=null;
+let score={correct:0,total:0};
+
+function switchMode(m){
+  mode=m;
+  document.getElementById("tabExplore").className="tab"+(m==="explore"?" active":"");
+  document.getElementById("tabQuiz").className="tab"+(m==="quiz"?" active":"");
+  if(m==="quiz"){score={correct:0,total:0};generateQuiz();}
+  render();
+}
+function setView(v){
+  viewMode=v;
+  document.getElementById("vt3d").className="vt-btn"+(v==="3d"?" active":"");
+  document.getElementById("vt2d").className="vt-btn"+(v==="2d"?" active":"");
+  render();
+}
+function setCurrentDir(d){currentDir=d;useCustomAngle=false;render();}
+function setBFieldDir(d){bFieldDir=d;useCustomAngle=false;render();}
+function setCustomAngle(v){useCustomAngle=true;customTheta=Number(v);render();}
+function resetAngle(){useCustomAngle=false;render();}
+
+function generateQuiz(){
+  const dirs=Object.keys(DIRS);
+  let iDir,bDir;
+  do{
+    iDir=dirs[Math.floor(Math.random()*dirs.length)];
+    bDir=dirs[Math.floor(Math.random()*dirs.length)];
+  }while(iDir===bDir||iDir===(bDir[0]==="+"?"-":"+")+bDir[1]);
+  // F = I x B
+  const Fv=forceVec(DIRS[iDir],DIRS[bDir]);
+  quizQ={iDir,bDir,answer:vecToKey(Fv)};
+  quizGuess=null;quizResult=null;
+}
+function selectGuess(k){if(!quizResult){quizGuess=k;render();}}
+function checkAnswer(){
+  if(!quizGuess||!quizQ)return;
+  const ok=quizGuess===quizQ.answer;
+  quizResult=ok?"correct":"incorrect";
+  score.total++;if(ok)score.correct++;
+  render();
+}
+function nextQuestion(){generateQuiz();render();}
+
+// ---- SVG helpers ----
+function svgArrow3D(from,to,color,hs,op){
+  hs=hs||0.12;op=op||1;
+  const p1=project(from,CX,CY,SC),p2=project(to,CX,CY,SC);
+  const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.sqrt(dx*dx+dy*dy);
+  if(len<2)return"";
+  const ux=dx/len,uy=dy/len,h=Math.min(hs*SC,len*0.4);
+  const bx=p2.x-ux*h,by=p2.y-uy*h;
+  return`<g opacity="${op}"><line x1="${p1.x}" y1="${p1.y}" x2="${bx}" y2="${by}" stroke="${color}" stroke-width="2.2"/><polygon points="${p2.x},${p2.y} ${bx-uy*h*0.45},${by+ux*h*0.45} ${bx+uy*h*0.45},${by-ux*h*0.45}" fill="${color}"/></g>`;
+}
+
+function svgArrow2D(x1,y1,x2,y2,color,sw,hs,op){
+  sw=sw||2.5;hs=hs||10;op=op||1;
+  const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+  if(len<2)return"";
+  const ux=dx/len,uy=dy/len;
+  const bx=x2-ux*hs,by=y2-uy*hs;
+  return`<g opacity="${op}"><line x1="${x1}" y1="${y1}" x2="${bx}" y2="${by}" stroke="${color}" stroke-width="${sw}"/><polygon points="${x2},${y2} ${bx-uy*hs*0.45},${by+ux*hs*0.45} ${bx+uy*hs*0.45},${by-ux*hs*0.45}" fill="${color}"/></g>`;
+}
+
+function svgDot(cx,cy,r,color,op){
+  op=op||1;
+  return`<g opacity="${op}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="2"/><circle cx="${cx}" cy="${cy}" r="${r*0.2}" fill="${color}"/></g>`;
+}
+function svgCrossCircle(cx,cy,r,color,op){
+  op=op||1;
+  const d=r*0.55;
+  return`<g opacity="${op}"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="2"/><line x1="${cx-d}" y1="${cy-d}" x2="${cx+d}" y2="${cy+d}" stroke="${color}" stroke-width="2"/><line x1="${cx+d}" y1="${cy-d}" x2="${cx-d}" y2="${cy+d}" stroke="${color}" stroke-width="2"/></g>`;
+}
+
+function svgLabel3D(pos,text,color,fs){
+  fs=fs||13;const p=project(pos,CX,CY,SC);
+  return`<text x="${p.x}" y="${p.y}" fill="${color}" text-anchor="middle" font-size="${fs}" font-weight="600">${text}</text>`;
+}
+
+// ---- 2D scene ----
+// 2D: +x right, +y up, +z out of page (⊙), -z into page (⊗)
+function render2DScene(iVec,bVec,showForce){
+  const mx=CX,my=CY-10;
+  let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#0f172a;border-radius:12px;display:block">`;
+
+  // Axes
+  svg+=svgArrow2D(mx-180,my,mx+180,my,"#64748b",1.5,8,0.3);
+  svg+=svgArrow2D(mx,my+140,mx,my-150,"#64748b",1.5,8,0.3);
+  svg+=`<text x="${mx+190}" y="${my+4}" fill="#64748b" font-size="12" font-weight="600">+x</text>`;
+  svg+=`<text x="${mx+6}" y="${my-158}" fill="#64748b" font-size="12" font-weight="600">+y</text>`;
+  svg+=`<text x="${mx+160}" y="${my-148}" fill="#64748b" font-size="11" font-weight="500" opacity="0.5">⊙ +z (out)</text>`;
+
+  const arrowLen=100,symR=11;
+
+  function drawZSym(px,py,zVal,color,r,op){
+    if(zVal>0) svg+=svgDot(px,py,r,color,op);      // +z = out of page = ⊙
+    else svg+=svgCrossCircle(px,py,r,color,op);      // -z = into page = ⊗
+  }
+
+  // ---- B field ----
+  if(Math.abs(bVec.z)>0.5){
+    for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++){
+      const px=mx+i*55,py=my+j*55;
+      drawZSym(px,py,bVec.z,"#60a5fa",symR,0.4);
+    }
+    svg+=`<text x="${mx-130}" y="${my-120}" fill="#60a5fa" font-size="14" font-weight="700">B</text>`;
+  } else {
+    let perpX=-bVec.y,perpY=bVec.x;
+    const bLen=arrowLen*1.1;
+    for(let i=-2;i<=2;i++){
+      const ox=perpX*i*45,oy=-perpY*i*45;
+      const px=mx+ox,py=my+oy;
+      svg+=svgArrow2D(px-bVec.x*bLen,py+bVec.y*bLen,px+bVec.x*bLen,py-bVec.y*bLen,"#60a5fa",2,8,0.4);
+    }
+    const blx=mx-Math.abs(bVec.y)*70-Math.abs(bVec.x)*20;
+    const bly=my-Math.abs(bVec.x)*70-Math.abs(bVec.y)*20;
+    svg+=`<text x="${blx}" y="${bly}" fill="#60a5fa" font-size="14" font-weight="700">B</text>`;
+  }
+
+  // ---- Wire + Current ----
+  if(Math.abs(iVec.z)>0.5){
+    svg+=`<circle cx="${mx}" cy="${my}" r="18" fill="#1e293b" stroke="#fbbf24" stroke-width="4"/>`;
+    drawZSym(mx,my,iVec.z,"#f59e0b",13,1);
+    svg+=`<text x="${mx+28}" y="${my+5}" fill="#f59e0b" font-size="14" font-weight="700">I</text>`;
+  } else {
+    const wx=iVec.x*160,wy=-iVec.y*160;
+    svg+=`<line x1="${mx-wx}" y1="${my-wy}" x2="${mx+wx}" y2="${my+wy}" stroke="#fbbf24" stroke-width="5" stroke-linecap="round"/>`;
+    const ax1=mx-iVec.x*arrowLen*0.1,ay1=my+iVec.y*arrowLen*0.1;
+    const ax2=mx+iVec.x*arrowLen*0.85,ay2=my-iVec.y*arrowLen*0.85;
+    svg+=svgArrow2D(ax1,ay1,ax2,ay2,"#f59e0b",3,12,1);
+    // I label offset perpendicular to current direction
+    const iPerpX=-iVec.y,iPerpY=-iVec.x;
+    svg+=`<text x="${ax2+iVec.x*10+iPerpX*18}" y="${ay2-iVec.y*10-iPerpY*18+4}" fill="#f59e0b" font-size="14" font-weight="700">I</text>`;
+  }
+
+  // ---- Force: F = I x B ----
+  if(showForce){
+    const Fc=forceVec(iVec,bVec);
+    const Fh=v3norm(Fc);
+    const Fm=v3len(Fc);
+    if(Fm>0.01){
+      if(Math.abs(Fh.z)>0.5){
+        // Force into/out of page — draw centered like the current z-symbol
+        svg+=`<circle cx="${mx}" cy="${my}" r="18" fill="none" stroke="#f43f5e" stroke-width="3" opacity="0.6"/>`;
+        drawZSym(mx,my,Fh.z,"#f43f5e",13,1);
+        svg+=`<text x="${mx-28}" y="${my+5}" fill="#f43f5e" font-size="14" font-weight="700">F</text>`;
+      } else {
+        const fScale=Fm*arrowLen*0.9;
+        const fx2=mx+Fh.x*fScale,fy2=my-Fh.y*fScale;
+        svg+=svgArrow2D(mx,my,fx2,fy2,"#f43f5e",3,12,1);
+        // F label offset perpendicular to force direction, away from axes
+        const fpX=-Fh.y,fpY=Fh.x;
+        // Choose the perpendicular side that moves away from the nearest axis
+        const sign = (Math.abs(Fh.x)>0.5) ? (fpY>0?1:-1) : (fpX>0?1:-1);
+        const flx=fx2*0.5+mx*0.5 + fpX*sign*22;
+        const fly=fy2*0.5+my*0.5 - fpY*sign*22;
+        svg+=`<text x="${flx}" y="${fly+4}" fill="#f43f5e" font-size="14" font-weight="700">F</text>`;
+      }
+    }
+  }
+
+  // Legend
+  svg+=`<g transform="translate(12,16)">`;
+  svg+=`<line x1="0" y1="0" x2="18" y2="0" stroke="#f59e0b" stroke-width="3"/><text x="24" y="4" fill="#f59e0b" font-size="11" font-weight="600">I (current)</text>`;
+  svg+=`<line x1="0" y1="18" x2="18" y2="18" stroke="#60a5fa" stroke-width="2.5"/><text x="24" y="22" fill="#60a5fa" font-size="11" font-weight="600">B (field)</text>`;
+  if(showForce)svg+=`<line x1="0" y1="36" x2="18" y2="36" stroke="#f43f5e" stroke-width="3"/><text x="24" y="40" fill="#f43f5e" font-size="11" font-weight="600">F (force)</text>`;
+  svg+=`</g>`;
+
+  svg+=`<g transform="translate(${W-120},${H-40})">`;
+  svg+=svgDot(10,0,7,"#94a3b8",0.6);
+  svg+=`<text x="24" y="4" fill="#94a3b8" font-size="10">= out of page (+z)</text>`;
+  svg+=svgCrossCircle(10,18,7,"#94a3b8",0.6);
+  svg+=`<text x="24" y="22" fill="#94a3b8" font-size="10">= into page (−z)</text>`;
+  svg+=`</g>`;
+
+  svg+=`</svg>`;
+  return svg;
+}
+
+// ---- 3D scene ----
+// Right-handed axes: +x right, +y up, +z out toward viewer
+function render3DScene(iVec,bVec,showForce){
+  let svg=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="background:#0f172a;border-radius:12px;display:block">`;
+
+  // Draw axes
+  svg+=svgArrow3D(v3(0,0,0),v3(1.6,0,0),"#64748b",0.08,0.4);
+  svg+=svgArrow3D(v3(0,0,0),v3(0,1.6,0),"#64748b",0.08,0.4);
+  svg+=svgArrow3D(v3(0,0,0),v3(0,0,1.6),"#64748b",0.08,0.4);
+  svg+=svgLabel3D(v3(1.85,0,0),"+x","#64748b",11);
+  svg+=svgLabel3D(v3(0,0,1.85),"+z","#64748b",11);
+  // +y label — compute projected position of y-axis tip and place label beside it
+  const yTip=project(v3(0,1.6,0),CX,CY,SC);
+  svg+=`<text x="${yTip.x+12}" y="${yTip.y-8}" fill="#64748b" font-size="11" font-weight="600">+y</text>`;
+
+  // B field grid
+  let perp1,perp2;
+  if(Math.abs(bVec.y)<0.9)perp1=v3norm(v3cross(bVec,v3(0,1,0)));
+  else perp1=v3norm(v3cross(bVec,v3(1,0,0)));
+  perp2=v3norm(v3cross(bVec,perp1));
+  for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){
+    const off=v3add(v3scale(perp1,i*0.7),v3scale(perp2,j*0.7));
+    svg+=svgArrow3D(v3add(off,v3scale(bVec,-1.0)),v3add(off,v3scale(bVec,1.0)),"#60a5fa",0.06,0.35);
+  }
+
+  // Wire
+  const wh=1.2;
+  const wp1=project(v3scale(iVec,-wh),CX,CY,SC),wp2=project(v3scale(iVec,wh),CX,CY,SC);
+  svg+=`<line x1="${wp1.x}" y1="${wp1.y}" x2="${wp2.x}" y2="${wp2.y}" stroke="#fbbf24" stroke-width="5" stroke-linecap="round"/>`;
+  svg+=svgArrow3D(v3scale(iVec,-0.1),v3scale(iVec,wh*0.85),"#f59e0b",0.10,1);
+
+  // Force: F = I x B
+  if(showForce){
+    const Fc=forceVec(iVec,bVec);
+    const Fh=v3norm(Fc);
+    const Fm=v3len(Fc);
+    if(Fm>0.01)svg+=svgArrow3D(v3(0,0,0),v3scale(Fh,Fm*1.0),"#f43f5e",0.12,1);
+  }
+
+  const o=project(v3(0,0,0),CX,CY,SC);
+  svg+=`<circle cx="${o.x}" cy="${o.y}" r="3" fill="#fff"/>`;
+
+  svg+=`<g transform="translate(12,16)">`;
+  svg+=`<line x1="0" y1="0" x2="18" y2="0" stroke="#f59e0b" stroke-width="3"/><text x="24" y="4" fill="#f59e0b" font-size="11" font-weight="600">I (current)</text>`;
+  svg+=`<line x1="0" y1="18" x2="18" y2="18" stroke="#60a5fa" stroke-width="2.5"/><text x="24" y="22" fill="#60a5fa" font-size="11" font-weight="600">B (field)</text>`;
+  if(showForce)svg+=`<line x1="0" y1="36" x2="18" y2="36" stroke="#f43f5e" stroke-width="3"/><text x="24" y="40" fill="#f43f5e" font-size="11" font-weight="600">F (force)</text>`;
+  svg+=`</g></svg>`;
+  return svg;
+}
+
+// ---- Main render ----
+function render(){
+  const svgEl=document.getElementById("svgContainer");
+  const ctrlEl=document.getElementById("controlsContainer");
+  const renderFn=viewMode==="3d"?render3DScene:render2DScene;
+
+  if(mode==="explore"){
+    const Iv=DIRS[currentDir],Bv=DIRS[bFieldDir];
+    svgEl.innerHTML=renderFn(Iv,Bv,true);
+
+    const cosA=v3dot(Iv,Bv);
+    const angleDeg=Math.round(Math.acos(Math.max(-1,Math.min(1,cosA)))/DEG);
+    const effAngle=useCustomAngle?customTheta:angleDeg;
+    const effSin=Math.sin(effAngle*DEG);
+    const Fc=forceVec(Iv,Bv),Fh=v3norm(Fc);
+    const showF=effSin>0.01;
+    const fLabel=showF?(FORCE_LABELS[vecToKey(Fh)]||"—"):"Zero (parallel/antiparallel)";
+
+    ctrlEl.innerHTML=`
+      <div class="controls">
+        <div class="grid2">
+          <div>
+            <label class="label">Current direction (I)</label>
+            <div class="btn-group">${Object.keys(DIRS).map(d=>`<button class="dir-btn${d===currentDir?' active':''}" onclick="setCurrentDir('${d}')">${d}</button>`).join("")}</div>
+          </div>
+          <div>
+            <label class="label">Magnetic field direction (B)</label>
+            <div class="btn-group">${Object.keys(DIRS).map(d=>`<button class="dir-btn${d===bFieldDir?' active':''}" onclick="setBFieldDir('${d}')">${d}</button>`).join("")}</div>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <label class="label">Angle between I and B: <span style="color:var(--bright);font-size:15px">${effAngle}°</span></label>
+          <input type="range" min="0" max="180" value="${effAngle}" oninput="setCustomAngle(this.value)">
+          ${useCustomAngle?'<button class="reset-btn" onclick="resetAngle()">Reset to axis angle</button>':''}
+        </div>
+        <div class="readout">
+          <div><span class="m">θ =</span> <strong>${effAngle}°</strong> <span class="m" style="margin-left:8px">sin θ =</span> <strong>${effSin.toFixed(3)}</strong></div>
+          <div><span class="m">Force magnitude ∝</span> <strong style="color:var(--force)">${effSin.toFixed(3)}</strong> <span class="m">× BIL</span></div>
+          <div><span class="m">Force direction:</span> <strong style="color:${showF?'var(--force)':'var(--muted)'}">${fLabel}</strong></div>
+        </div>
+      </div>`;
+  }else{
+    if(!quizQ)generateQuiz();
+    const Iv=DIRS[quizQ.iDir],Bv=DIRS[quizQ.bDir];
+    svgEl.innerHTML=renderFn(Iv,Bv,!!quizResult);
+
+    let optsHtml=FORCE_KEYS.map(k=>{
+      let cls="opt-btn";
+      if(quizResult)cls+=" locked";
+      if(quizGuess===k&&!quizResult)cls+=" selected";
+      if(quizGuess===k&&quizResult==="correct")cls+=" correct";
+      if(quizGuess===k&&quizResult==="incorrect")cls+=" wrong";
+      return`<button class="${cls}" onclick="selectGuess('${k}')">${FORCE_LABELS[k]}</button>`;
+    }).join("");
+
+    let resultHtml="";
+    if(quizResult){
+      if(quizResult==="correct"){
+        resultHtml=`<div class="result-text correct">Correct!</div>`;
+      }else{
+        resultHtml=`<div class="result-text wrong">Not quite — the answer is ${FORCE_LABELS[quizQ.answer]}</div>
+          <p class="hint-text">Using your right hand: point your thumb along I (${quizQ.iDir}), fingers along B (${quizQ.bDir}). Your palm pushes in the direction of F.</p>`;
+      }
+      resultHtml+=`<div class="next-row">
+        <button class="check-btn" onclick="nextQuestion()">Next Question</button>
+        <span class="score">Score: <strong>${score.correct}</strong> / ${score.total}</span>
+      </div>`;
+    }
+
+    ctrlEl.innerHTML=`
+      <div class="controls">
+        <div class="quiz-info"><span class="c-current" style="font-weight:700">I</span> points in the <strong>${DIR_LABELS[quizQ.iDir]}</strong> direction</div>
+        <div class="quiz-info"><span class="c-bfield" style="font-weight:700">B</span> points in the <strong>${DIR_LABELS[quizQ.bDir]}</strong> direction</div>
+        <p class="quiz-prompt">What is the direction of the magnetic force on the wire?</p>
+        <div class="quiz-opts">${optsHtml}</div>
+        ${!quizResult?`<button class="check-btn" ${!quizGuess?'disabled':''} onclick="checkAnswer()">Check Answer</button>`:''}
+        ${resultHtml}
+      </div>`;
+  }
+}
+
+render();
+</script>
+</body>
+</html>
